@@ -11,17 +11,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
-            --bg:            #000000;
-            --surface:       #0a0a0c;
-            --border:        rgba(255, 255, 255, 0.1);
-            --accent:        #6366f1;
-            --accent-glow:   rgba(99, 102, 241, 0.6);
-            --gold:          #D4AF37;
-            --danger:        #ef4444;
-            --success:       #10b981;
-            --text:          #ffffff;
-            --text-dim:      #999999; /* was #666666 — improved contrast ratio */
-            --focus-ring:    0 0 0 3px rgba(99, 102, 241, 0.6);
+            --bg:          #000000;
+            --surface:     #0a0a0c;
+            --border:      rgba(255, 255, 255, 0.1);
+            --accent:      #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.6);
+            --gold:        #D4AF37;
+            --danger:      #ef4444;
+            --success:     #10b981;
+            --text:        #ffffff;
+            --text-dim:    #999999;
+            --focus-ring:  0 0 0 3px rgba(99, 102, 241, 0.6);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -35,30 +35,17 @@
             user-select: none;
         }
 
-        /* Global focus ring — keyboard users get visible indicator */
-        :focus-visible {
-            outline: none;
-            box-shadow: var(--focus-ring);
-            border-radius: 4px;
-        }
+        :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 4px; }
 
-        /* Reset button defaults so we can use <button> semantically */
         button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: inherit;
-            font-family: inherit;
-            font-size: inherit;
-            padding: 0;
-            margin: 0;
+            background: none; border: none; cursor: pointer;
+            color: inherit; font-family: inherit; font-size: inherit; padding: 0; margin: 0;
         }
 
         /* ── LAYOUT ─────────────────────────────────────────── */
         .app-shell {
             display: flex; flex-direction: column;
-            height: 100vh; height: 100dvh;
-            position: relative;
+            height: 100vh; height: 100dvh; position: relative;
         }
 
         header {
@@ -80,13 +67,10 @@
 
         .icon-btn {
             display: flex; align-items: center; justify-content: center;
-            width: 40px; height: 40px; border-radius: 50%;
-            color: var(--text-dim);
+            width: 40px; height: 40px; border-radius: 50%; color: var(--text-dim);
             transition: color 0.2s, background 0.2s;
         }
-        .icon-btn:hover, .icon-btn:focus-visible {
-            color: var(--text); background: rgba(255,255,255,0.05);
-        }
+        .icon-btn:hover, .icon-btn:focus-visible { color: var(--text); background: rgba(255,255,255,0.05); }
         .icon-btn svg { width: 20px; height: 20px; pointer-events: none; }
 
         /* ── VIEWPORT ───────────────────────────────────────── */
@@ -115,23 +99,30 @@
             margin-bottom: 8px; display: block;
         }
 
+        /* Reusable stat row — replaces repeated inline styles in cards */
+        .stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0;
+        }
+        .stat-row + .stat-row { border-top: 1px solid #1a1a1a; }
+        .stat-row-label { color: #888; font-size: 14px; }
+        .stat-row-value { font-weight: 600; font-size: 14px; }
+
         /* ── ECLIPSE RING ───────────────────────────────────── */
         .eclipse-wrapper {
             position: relative; width: 260px; height: 260px;
-            margin: 20px auto 40px;
+            margin: 20px auto 10px;
             display: flex; align-items: center; justify-content: center;
         }
 
         .eclipse-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-
-        .ring-track { fill: none; stroke: #1a1a1a; stroke-width: 6; }
-
+        .ring-track  { fill: none; stroke: #1a1a1a; stroke-width: 6; }
         .ring-active {
             fill: none; stroke: url(#auraGradient); stroke-width: 6;
             stroke-linecap: round;
-            /* stroke-dasharray and initial stroke-dashoffset set precisely by JS */
+            /* Precise values set by JS at bootstrap — CSS values are fallbacks */
             stroke-dasharray: 628.318;
-            stroke-dashoffset: 628.318;
+            stroke-dashoffset: 628.318; /* start empty */
             filter: drop-shadow(0 0 8px var(--accent-glow));
             transition: stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -141,11 +132,15 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        .hero-date {
-            font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #fff;
-            text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        .hero-date { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff; text-shadow: 0 0 20px rgba(99,102,241,0.3); }
+        .hero-sub  { font-size: 12px; color: var(--text-dim); margin-top: 4px; font-weight: 500; }
+
+        /* Optimization % badge below ring */
+        .ring-opt-pct {
+            text-align: center; margin-top: 8px; margin-bottom: 24px;
+            font-size: 11px; font-weight: 600; letter-spacing: 1px;
+            color: var(--accent); opacity: 0.8;
         }
-        .hero-sub { font-size: 13px; color: var(--text-dim); margin-top: 5px; font-weight: 500; }
 
         /* ── SLIDER ─────────────────────────────────────────── */
         .slider-wrap { position: relative; padding: 15px 0; }
@@ -160,21 +155,17 @@
             margin-top: -13px; transform: scale(1); transition: transform 0.1s;
         }
         input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 2px; background: #333; border-radius: 2px;
-        }
-        input[type=range]:focus-visible::-webkit-slider-thumb {
-            box-shadow: 0 0 20px rgba(255,255,255,0.4), var(--focus-ring);
-        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #333; border-radius: 2px; }
+        input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 20px rgba(255,255,255,0.4), var(--focus-ring); }
 
-        /* ── STATUS CLASSES (replaces inline JS color assignments) ── */
+        /* ── STATUS CLASSES ─────────────────────────────────── */
         .status-elite   { color: var(--success) !important; }
         .status-healthy { color: var(--accent)  !important; }
         .status-risk    { color: var(--danger)   !important; }
 
-        .progress-bar               { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+        .progress-bar                { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
         .progress-bar.status-elite  { background: var(--success); }
-        .progress-bar.status-healthy{ background: var(--accent); }
+        .progress-bar.status-healthy { background: var(--accent); }
         .progress-bar.status-risk   { background: var(--danger); }
 
         .sim-badge { font-size: 10px; background: #222; padding: 3px 8px; border-radius: 4px; }
@@ -187,9 +178,7 @@
             padding: 20px; margin-bottom: 15px; border-radius: 20px;
             width: 100%; text-align: left; display: block;
         }
-        .mastery-card:active, .mastery-card:focus-visible {
-            transform: scale(0.98); background: #1a1a1a;
-        }
+        .mastery-card:active, .mastery-card:focus-visible { transform: scale(0.98); background: #1a1a1a; }
 
         .util-sim {
             background: rgba(255,255,255,0.03); border-radius: 16px;
@@ -197,8 +186,16 @@
         }
         .progress-track {
             height: 6px; background: #222; border-radius: 3px;
-            margin: 15px 0; overflow: hidden;
+            margin: 12px 0; overflow: hidden;
         }
+
+        /* Inline limit input in utilization sim */
+        .limit-input {
+            background: transparent; border: none; border-bottom: 1px solid #333;
+            color: #fff; font-family: inherit; font-size: 14px; font-weight: 600;
+            width: 80px; text-align: right; padding: 2px 0;
+        }
+        .limit-input:focus { outline: none; border-color: var(--accent); }
 
         /* ── NAVIGATION ─────────────────────────────────────── */
         .nav-dock {
@@ -234,9 +231,7 @@
             font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text);
             transition: background 0.2s, border-color 0.2s;
         }
-        .launch-btn:hover, .launch-btn:focus-visible {
-            background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3);
-        }
+        .launch-btn:hover, .launch-btn:focus-visible { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
         .launch-btn svg { width: 18px; height: 18px; }
 
         /* ── SETTINGS MODAL ─────────────────────────────────── */
@@ -259,9 +254,7 @@
             width: 36px; height: 36px; border-radius: 50%; color: var(--text-dim);
             transition: background 0.2s, color 0.2s;
         }
-        .modal-close:hover, .modal-close:focus-visible {
-            background: rgba(255,255,255,0.05); color: var(--text);
-        }
+        .modal-close:hover, .modal-close:focus-visible { background: rgba(255,255,255,0.05); color: var(--text); }
         .modal-close svg { width: 20px; height: 20px; }
 
         .form-group { margin-bottom: 30px; }
@@ -276,11 +269,10 @@
             width: 100%; background: transparent; border: none;
             border-bottom: 1px solid #333; color: #fff;
             font-size: 24px; font-family: inherit;
-            padding: 10px 0; border-radius: 0;
-            transition: border-color 0.2s;
+            padding: 10px 0; border-radius: 0; transition: border-color 0.2s;
         }
-        input.clean-input:focus        { outline: none; border-color: var(--accent); }
-        input.clean-input.field-error  { border-color: var(--danger); }
+        input.clean-input:focus { outline: none; border-color: var(--accent); }
+        input.clean-input.field-error { border-color: var(--danger); }
         input.clean-input:focus-visible { box-shadow: none; }
 
         .modal-error {
@@ -299,8 +291,7 @@
 
         .wipe-btn {
             width: 100%; text-align: center; margin-top: 20px;
-            padding: 10px; font-size: 12px; color: var(--danger);
-            opacity: 0.7; transition: opacity 0.2s;
+            padding: 10px; font-size: 12px; color: var(--danger); opacity: 0.7; transition: opacity 0.2s;
         }
         .wipe-btn:hover, .wipe-btn:focus-visible { opacity: 1; }
 
@@ -375,7 +366,7 @@
         <section id="view-cockpit" class="view active"
                  role="region" aria-label="Cockpit – Debt Overview">
 
-            <!-- Ring visualization (decorative; values announced via aria-live below) -->
+            <!-- Ring: fills as payment improves (empty = at minimum, full = maximally optimized) -->
             <div class="eclipse-wrapper" aria-hidden="true">
                 <svg class="eclipse-svg" viewBox="0 0 220 220">
                     <defs>
@@ -388,20 +379,24 @@
                     <circle id="auraRing" class="ring-active" cx="110" cy="110" r="100"/>
                 </svg>
                 <div class="eclipse-content">
-                    <span class="label">FREEDOM</span>
+                    <span class="label">DEBT FREE</span>
                     <div class="hero-date" id="dispDate">--</div>
                     <div class="hero-sub"  id="dispTimeLeft">--</div>
                 </div>
             </div>
 
-            <!-- Screen-reader announcement region for all dynamic values -->
-            <div aria-live="polite" aria-atomic="true" class="sr-only"
-                 id="srAnnounce" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">
+            <!-- Optimization % indicator below ring -->
+            <div class="ring-opt-pct" id="dispOptPct" aria-hidden="true"></div>
+
+            <!-- Screen-reader announcement region -->
+            <div aria-live="polite" aria-atomic="true"
+                 id="srAnnounce"
+                 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">
             </div>
 
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                    <label class="label" for="slider">MONTHLY FUEL</label>
+                    <label class="label" for="slider">MONTHLY PAYMENT</label>
                     <span style="font-size:20px;font-weight:600;color:var(--accent)"
                           id="dispPay">$0</span>
                 </div>
@@ -410,9 +405,13 @@
                            oninput="updateApp(parseFloat(this.value))"
                            aria-label="Monthly payment amount in dollars">
                 </div>
-                <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:5px"
-                     aria-hidden="true">
-                    Slide to shrink your timeline
+                <!-- This month's split: interest vs principal -->
+                <div id="monthlyBreakdown"
+                     style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;padding-top:10px;border-top:1px solid #1a1a1a">
+                    <span><span style="color:var(--danger)">▼ <span id="dispMonthInt">$0</span></span>
+                          <span style="color:#555;margin-left:3px">interest</span></span>
+                    <span><span style="color:var(--success)">▲ <span id="dispMonthPrin">$0</span></span>
+                          <span style="color:#555;margin-left:3px">principal</span></span>
                 </div>
             </div>
 
@@ -421,11 +420,13 @@
                     <span class="label">INTEREST SAVED</span>
                     <div style="font-size:18px;font-weight:600;color:var(--success)"
                          id="dispSaved">$0</div>
+                    <div style="font-size:10px;color:#555;margin-top:4px">vs minimum payment</div>
                 </div>
                 <div class="card" style="padding:15px;margin:0">
                     <span class="label">TIME RECLAIMED</span>
                     <div style="font-size:18px;font-weight:600;color:#fff"
-                         id="dispTimeSaved">0 Yrs</div>
+                         id="dispTimeSaved">0 mo</div>
+                    <div style="font-size:10px;color:#555;margin-top:4px">vs minimum payment</div>
                 </div>
             </div>
         </section>
@@ -434,26 +435,45 @@
         <section id="view-intel" class="view"
                  role="region" aria-label="Intel – Capital Efficiency">
 
-            <span class="label" style="margin-bottom:20px">CAPITAL EFFICIENCY</span>
+            <span class="label" style="margin-bottom:16px">DEBT SUMMARY</span>
 
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;margin-bottom:15px;
-                            border-bottom:1px solid #222;padding-bottom:10px">
-                    <span style="color:#888;font-size:14px">Principal</span>
-                    <span id="repPrincipal" style="font-weight:600">$0</span>
+            <div class="card" style="padding:16px 20px">
+                <div class="stat-row">
+                    <span class="stat-row-label">Principal</span>
+                    <span class="stat-row-value" id="repPrincipal">$0</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:15px;
-                            border-bottom:1px solid #222;padding-bottom:10px">
-                    <span style="color:#888;font-size:14px">Interest Burn</span>
-                    <span id="repInterest" style="font-weight:600;color:var(--danger)">$0</span>
+                <div class="stat-row">
+                    <span class="stat-row-label">Total Interest (at current payment)</span>
+                    <span class="stat-row-value status-risk" id="repInterest">$0</span>
                 </div>
-                <div style="display:flex;justify-content:space-between">
-                    <span style="color:#fff;font-size:14px">Burn Ratio</span>
-                    <span id="repRatio" style="font-weight:600;color:var(--gold)">0%</span>
+                <div class="stat-row">
+                    <span class="stat-row-label">Total Cost of Debt</span>
+                    <span class="stat-row-value" id="repTotalCost">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">Interest Burn Ratio</span>
+                    <span class="stat-row-value" style="color:var(--gold)" id="repRatio">0%</span>
                 </div>
             </div>
 
-            <span class="label" style="margin-top:30px;margin-bottom:10px">STRATEGIC OPPORTUNITIES</span>
+            <span class="label" style="margin-top:8px;margin-bottom:16px">THIS MONTH'S PAYMENT</span>
+
+            <div class="card" style="padding:16px 20px">
+                <div class="stat-row">
+                    <span class="stat-row-label">Goes to Interest</span>
+                    <span class="stat-row-value status-risk" id="repMonthIntIntel">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">Goes to Principal</span>
+                    <span class="stat-row-value status-elite" id="repMonthPrinIntel">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">50% Paid Off By</span>
+                    <span class="stat-row-value" style="color:var(--accent)" id="repHalfway">--</span>
+                </div>
+            </div>
+
+            <span class="label" style="margin-top:8px;margin-bottom:16px">STRATEGIC OPPORTUNITIES</span>
             <div id="tacticList" aria-live="polite" aria-label="Tactical payment opportunities"></div>
         </section>
 
@@ -473,9 +493,24 @@
                         OPTIMIZED (ELITE)
                     </span>
                 </div>
-                <div style="font-size:12px;color:#999;margin:10px 0">
-                    Keep utilization under 30% to maximize score.
+
+                <!-- Configurable credit limit -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px">
+                    <span style="font-size:11px;color:#666">Credit Limit</span>
+                    <div style="display:flex;align-items:center;gap:4px">
+                        <span style="font-size:13px;color:#555">$</span>
+                        <input type="number" id="simLimit" class="limit-input"
+                               min="100" max="500000" step="100" value="10000"
+                               inputmode="numeric"
+                               aria-label="Total credit limit in dollars"
+                               oninput="onLimitChange()">
+                    </div>
                 </div>
+
+                <div style="font-size:11px;color:#666;margin-bottom:10px">
+                    Keep utilization under 30% for a healthy score.
+                </div>
+
                 <div class="progress-track"
                      role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20"
                      aria-label="Credit utilization percentage">
@@ -484,10 +519,12 @@
                 <input type="range" id="simSlider"
                        min="0" max="10000" value="2000"
                        oninput="runSim(parseFloat(this.value))"
-                       aria-label="Credit balance out of $10,000 limit"
+                       aria-label="Credit balance used"
                        aria-valuemin="0" aria-valuemax="10000" aria-valuenow="2000">
-                <div style="text-align:right;font-size:14px;font-weight:700;margin-top:5px"
-                     id="simVal">$2,000 / $10k</div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px">
+                    <span style="font-size:11px;color:#555" id="simPctLabel">20.0% utilized</span>
+                    <span style="font-size:14px;font-weight:700" id="simVal">$2,000 / $10,000</span>
+                </div>
             </div>
 
             <span class="label" style="margin-bottom:10px">ADVANCED PROTOCOLS</span>
@@ -537,9 +574,7 @@
                 aria-label="Cockpit view" aria-pressed="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="6"/>
-                <circle cx="12" cy="12" r="2"/>
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
             </svg>
         </button>
         <button class="nav-btn" id="nav-intel"
@@ -620,6 +655,9 @@ const DEFAULTS    = Object.freeze({ bal: 15000, rate: 18.5, min: 250 });
 const TACTIC_ICONS = {
     coffee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
     rocket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
 };
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -627,10 +665,6 @@ let state    = { ...DEFAULTS };
 let baseline = { valid: false, m: 0, int: 0 };
 
 // ─── STORAGE ─────────────────────────────────────────────────────────────────
-/**
- * Load and validate state from localStorage.
- * Returns defaults (and clears bad data) if stored data fails schema validation.
- */
 function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
@@ -657,45 +691,63 @@ function loadState() {
 
 // ─── FINANCIAL ENGINE ────────────────────────────────────────────────────────
 /**
- * Calculate payoff schedule.
+ * Calculate complete payoff schedule.
+ * Works in whole CENTS to eliminate floating-point drift over hundreds of iterations.
  *
- * Works in whole CENTS internally to eliminate floating-point drift that
- * accumulates over hundreds of monthly iterations when using dollar fractions.
- *
- * @param {number} b  Balance in dollars (e.g. 15000)
- * @param {number} r  Annual interest rate as a percentage (e.g. 18.5 for 18.5%)
- * @param {number} p  Monthly payment in dollars (e.g. 350)
+ * @param {number} b  Balance in dollars
+ * @param {number} r  Annual interest rate as a percentage (e.g. 18.5)
+ * @param {number} p  Monthly payment in dollars
  * @returns {{ valid: boolean, m: number, int: number }}
- *          valid — whether payoff is mathematically possible at this payment level
- *          m     — months to payoff
- *          int   — total interest paid in dollars
  */
 function calc(b, r, p) {
-    const monthlyRate = r / 100 / 12;
-
-    // Convert to cents to avoid floating-point drift over hundreds of iterations
+    const monthlyRate       = r / 100 / 12;
     let   balCents          = Math.round(b * 100);
     const payCents          = Math.round(p * 100);
     const firstInterestCents = Math.round(balCents * monthlyRate);
 
-    // Payment must exceed first month's interest to make forward progress
     if (payCents <= firstInterestCents) {
         return { valid: false, m: 0, int: 0 };
     }
 
-    let months            = 0;
+    let months             = 0;
     let totalInterestCents = 0;
 
     while (balCents > 0 && months < MAX_MONTHS) {
         const interestCents  = Math.round(balCents * monthlyRate);
-        // On the last payment, only pay what remains
         const principalCents = Math.min(payCents - interestCents, balCents);
-        balCents             -= principalCents;
-        totalInterestCents   += interestCents;
+        balCents            -= principalCents;
+        totalInterestCents  += interestCents;
         months++;
     }
 
     return { valid: true, m: months, int: totalInterestCents / 100 };
+}
+
+/**
+ * Find the number of months until balance drops to targetFraction of original.
+ * Used for milestone calculations (e.g. 50% paid off).
+ *
+ * @param {number} b              Starting balance in dollars
+ * @param {number} r              Annual interest rate as a percentage
+ * @param {number} p              Monthly payment in dollars
+ * @param {number} targetFraction e.g. 0.5 for the 50% remaining milestone
+ * @returns {number}              Months until balance ≤ targetFraction * b, or -1 if unreachable
+ */
+function monthsToFraction(b, r, p, targetFraction) {
+    const monthlyRate  = r / 100 / 12;
+    let   balCents     = Math.round(b * 100);
+    const payCents     = Math.round(p * 100);
+    const targetCents  = Math.round(b * targetFraction * 100);
+
+    let months = 0;
+    while (balCents > targetCents && months < MAX_MONTHS) {
+        const interestCents  = Math.round(balCents * monthlyRate);
+        const principalCents = Math.min(payCents - interestCents, balCents);
+        if (principalCents <= 0) return -1; // payment can't make progress
+        balCents -= principalCents;
+        months++;
+    }
+    return months;
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -709,7 +761,6 @@ function init() {
     baseline = calc(state.bal, state.rate, state.min);
 
     if (!baseline.valid) {
-        // Min payment can't cover interest — compute the true minimum and warn the user
         const minViable = Math.ceil(state.bal * (state.rate / 100 / 12)) + 1;
         showModalError(
             'Your minimum payment of $' + state.min.toLocaleString() +
@@ -720,15 +771,27 @@ function init() {
     }
 
     setupSlider();
+    // Render at the slider's current position (minimum payment on first load)
     updateApp(parseFloat(document.getElementById('slider').value));
-    runSim(2000);
+    // Restore credit limit from storage and render the sim
+    const savedLimit = parseInt(localStorage.getItem('aura_credit_limit') || '10000', 10);
+    document.getElementById('simLimit').value  = savedLimit;
+    document.getElementById('simSlider').max   = savedLimit;
+    document.getElementById('simSlider').value = Math.min(2000, savedLimit * 0.2);
+    runSim(parseFloat(document.getElementById('simSlider').value));
 }
 
 function launch() {
+    // Detect first-time user before init() creates the storage key
+    const isFirstTime = !localStorage.getItem(STORAGE_KEY);
     init();
     document.getElementById('splashScreen').classList.add('hidden');
-    // Move focus into the app after splash dismissal
-    document.getElementById('settingsBtn').focus();
+    if (isFirstTime) {
+        // Guide new users straight to their settings
+        setTimeout(() => openSettings(), 450);
+    } else {
+        document.getElementById('settingsBtn').focus();
+    }
 }
 
 // ─── VAULT MANAGEMENT ────────────────────────────────────────────────────────
@@ -737,23 +800,19 @@ function saveVault() {
     const rateRaw = parseFloat(document.getElementById('inRate').value);
     const minRaw  = parseFloat(document.getElementById('inMin').value);
 
-    // Field-level validation rules
     const fields = [
         {
             id: 'inBal',
-            val: balRaw,
             ok: Number.isFinite(balRaw) && balRaw > 0 && balRaw <= 10_000_000,
             msg: 'Balance must be between $1 and $10,000,000.',
         },
         {
             id: 'inRate',
-            val: rateRaw,
             ok: Number.isFinite(rateRaw) && rateRaw > 0 && rateRaw <= 100,
             msg: 'Interest rate must be between 0.01% and 100%.',
         },
         {
             id: 'inMin',
-            val: minRaw,
             ok: Number.isFinite(minRaw) && minRaw > 0,
             msg: 'Minimum payment must be greater than $0.',
         },
@@ -765,10 +824,7 @@ function saveVault() {
         if (!ok && !firstError) firstError = msg;
     });
 
-    if (firstError) {
-        showModalError(firstError);
-        return;
-    }
+    if (firstError) { showModalError(firstError); return; }
 
     clearModalError();
     state = { bal: balRaw, rate: rateRaw, min: minRaw };
@@ -780,6 +836,7 @@ function saveVault() {
 function wipeVault() {
     if (confirm('Permanently delete all vault data?')) {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem('aura_credit_limit');
         location.reload();
     }
 }
@@ -789,46 +846,88 @@ function updateApp(pay) {
     const res = calc(state.bal, state.rate, pay);
     if (!res.valid) return;
 
-    // ── Cockpit ──────────────────────────────────────────────────────────────
+    // ── Time display ─────────────────────────────────────────────────────────
+    // Show months when less than 24 months; years otherwise — more precise and
+    // more motivating when the number is small.
     const targetDate = new Date();
     targetDate.setMonth(targetDate.getMonth() + res.m);
-    const dateStr     = targetDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
-    const payStr      = '$' + Math.round(pay).toLocaleString();
-    const timeLeftStr = (res.m / 12).toFixed(1) + ' Years Remaining';
+    const dateStr = targetDate
+        .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        .toUpperCase();
 
+    let timeLeftStr;
+    if (res.m < 24) {
+        timeLeftStr = res.m + ' month' + (res.m === 1 ? '' : 's') + ' away';
+    } else {
+        timeLeftStr = (res.m / 12).toFixed(1) + ' years away';
+    }
+
+    // ── Savings vs baseline ───────────────────────────────────────────────────
     const interestSaved = Math.max(0, baseline.int - res.int);
-    const savedStr      = '$' + Math.round(interestSaved).toLocaleString();
     const monthsSaved   = Math.max(0, baseline.m - res.m);
-    const timeSavedStr  = (monthsSaved / 12).toFixed(1) + ' Yrs';
+    let   timeSavedStr;
+    if (monthsSaved === 0) {
+        timeSavedStr = '0 mo';
+    } else if (monthsSaved < 24) {
+        timeSavedStr = monthsSaved + ' mo';
+    } else {
+        timeSavedStr = (monthsSaved / 12).toFixed(1) + ' yrs';
+    }
 
-    document.getElementById('dispDate').textContent     = dateStr;
-    document.getElementById('dispPay').textContent      = payStr;
-    document.getElementById('dispTimeLeft').textContent = timeLeftStr;
-    document.getElementById('dispSaved').textContent    = savedStr;
+    // ── Monthly breakdown (first month) ──────────────────────────────────────
+    const monthInt  = state.bal * (state.rate / 100 / 12);
+    const monthPrin = Math.max(0, pay - monthInt);
+
+    // ── Ring: fills as payment IMPROVES ──────────────────────────────────────
+    // ratio = 1 at minimum payment (ring empty — lots to improve)
+    // ratio → 0 at max payment (ring full — maximally optimized)
+    // offset = RING_CIRC * ratio: high offset = empty, low offset = full
+    const ratio     = baseline.m > 0 ? Math.min(res.m / baseline.m, 1) : 1;
+    const offset    = RING_CIRC * ratio;
+    const optPct    = Math.round((1 - ratio) * 100);
+
+    // ── Write to DOM ─────────────────────────────────────────────────────────
+    document.getElementById('dispDate').textContent      = dateStr;
+    document.getElementById('dispTimeLeft').textContent  = timeLeftStr;
+    document.getElementById('dispPay').textContent       = '$' + Math.round(pay).toLocaleString();
+    document.getElementById('dispSaved').textContent     = '$' + Math.round(interestSaved).toLocaleString();
     document.getElementById('dispTimeSaved').textContent = timeSavedStr;
+    document.getElementById('dispMonthInt').textContent  = '$' + Math.round(monthInt).toLocaleString();
+    document.getElementById('dispMonthPrin').textContent = '$' + Math.round(monthPrin).toLocaleString();
+    document.getElementById('dispOptPct').textContent    =
+        optPct > 0 ? optPct + '% optimized above minimum' : 'at minimum payment';
 
-    // Update slider ARIA value
-    const slider = document.getElementById('slider');
-    slider.setAttribute('aria-valuenow', Math.round(pay));
-
-    // Announce summary to screen readers
-    document.getElementById('srAnnounce').textContent =
-        'At ' + payStr + ' per month, debt-free by ' + dateStr +
-        '. Interest saved: ' + savedStr + '. Time saved: ' + timeSavedStr + '.';
-
-    // ── Eclipse ring ─────────────────────────────────────────────────────────
-    // Ring represents the debt burden. Full ring = baseline timeline.
-    // As payment increases the ratio shrinks → ring shrinks → less burden.
-    // offset = 0 means fully drawn; offset = RING_CIRC means empty.
-    const ratio  = baseline.m > 0 ? Math.min(res.m / baseline.m, 1) : 1;
-    const offset = RING_CIRC * (1 - ratio);
     document.getElementById('auraRing').style.strokeDashoffset = offset;
 
+    // Slider ARIA
+    document.getElementById('slider').setAttribute('aria-valuenow', Math.round(pay));
+
+    // Screen-reader summary
+    document.getElementById('srAnnounce').textContent =
+        'At $' + Math.round(pay).toLocaleString() + ' per month, debt-free ' + dateStr +
+        '. Interest saved: $' + Math.round(interestSaved).toLocaleString() +
+        '. Time saved: ' + timeSavedStr + '.';
+
     // ── Intel panel ───────────────────────────────────────────────────────────
-    document.getElementById('repPrincipal').textContent = '$' + Math.round(state.bal).toLocaleString();
-    document.getElementById('repInterest').textContent  = '$' + Math.round(res.int).toLocaleString();
-    const burnRatio = res.int / (state.bal + res.int) * 100;
-    document.getElementById('repRatio').textContent     = burnRatio.toFixed(1) + '%';
+    const totalCost = state.bal + res.int;
+    const burnRatio = res.int / totalCost * 100;
+    const halfway   = monthsToFraction(state.bal, state.rate, pay, 0.5);
+    let   halfwayStr;
+    if (halfway < 0) {
+        halfwayStr = 'N/A';
+    } else {
+        const hw = new Date();
+        hw.setMonth(hw.getMonth() + halfway);
+        halfwayStr = hw.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
+    }
+
+    document.getElementById('repPrincipal').textContent     = '$' + Math.round(state.bal).toLocaleString();
+    document.getElementById('repInterest').textContent      = '$' + Math.round(res.int).toLocaleString();
+    document.getElementById('repTotalCost').textContent     = '$' + Math.round(totalCost).toLocaleString();
+    document.getElementById('repRatio').textContent         = burnRatio.toFixed(1) + '%';
+    document.getElementById('repMonthIntIntel').textContent = '$' + Math.round(monthInt).toLocaleString();
+    document.getElementById('repMonthPrinIntel').textContent = '$' + Math.round(monthPrin).toLocaleString();
+    document.getElementById('repHalfway').textContent       = halfwayStr;
 
     renderTactics(res, pay);
 }
@@ -836,26 +935,66 @@ function updateApp(pay) {
 // ─── TACTIC CARDS ────────────────────────────────────────────────────────────
 function renderTactics(res, pay) {
     const list = document.getElementById('tacticList');
-
-    // Clear safely — avoids the O(n²) innerHTML+= pattern
     while (list.firstChild) list.removeChild(list.firstChild);
 
-    const sim1 = calc(state.bal, state.rate, pay + 50);
-    if (sim1.valid && sim1.m < res.m) {
+    // 1. Coffee Swap: +$50/mo
+    const sim50 = calc(state.bal, state.rate, pay + 50);
+    if (sim50.valid && sim50.m < res.m) {
         list.appendChild(createTacticEl(
-            'The Coffee Swap', 'Add $50/mo',
-            'SAVE $' + Math.round(res.int - sim1.int).toLocaleString(),
+            'The Coffee Swap', '+$50/mo extra',
+            'SAVE $' + Math.round(res.int - sim50.int).toLocaleString(),
             'coffee'
         ));
     }
 
-    const sim2 = calc(state.bal, state.rate, pay + 200);
-    if (sim2.valid && sim2.m < res.m) {
+    // 2. Velocity Protocol: +$200/mo
+    const sim200 = calc(state.bal, state.rate, pay + 200);
+    if (sim200.valid && sim200.m < res.m) {
         list.appendChild(createTacticEl(
-            'Velocity Protocol', 'Add $200/mo',
-            '-' + (res.m - sim2.m) + ' MONTHS',
+            'Velocity Protocol', '+$200/mo extra',
+            '−' + (res.m - sim200.m) + ' months',
             'rocket'
         ));
+    }
+
+    // 3. Bi-weekly trick: pay half monthly every 2 weeks
+    //    → 26 half-payments/year = 13 full payments instead of 12
+    //    → equivalent monthly rate: pay * 13/12
+    const biWeeklyEffective = pay * 13 / 12;
+    const simBW = calc(state.bal, state.rate, biWeeklyEffective);
+    if (simBW.valid && simBW.m < res.m) {
+        list.appendChild(createTacticEl(
+            'Bi-Weekly Switch', 'Pay half your amount every 2 weeks',
+            '−' + (res.m - simBW.m) + ' months · free trick',
+            'calendar'
+        ));
+    }
+
+    // 4. Lump sum: $500 extra applied today
+    if (state.bal > 500) {
+        const simLump = calc(state.bal - 500, state.rate, pay);
+        if (simLump.valid && simLump.m < res.m) {
+            list.appendChild(createTacticEl(
+                '$500 Lump Sum', 'Apply $500 extra to principal today',
+                'SAVE $' + Math.round(res.int - simLump.int).toLocaleString() +
+                ' · −' + (res.m - simLump.m) + ' mo',
+                'bolt'
+            ));
+        }
+    }
+
+    // 5. Pay it off in 12 months — show required payment and savings
+    if (res.m > 12) {
+        // Binary-search for the payment that pays off in exactly 12 months
+        const payIn12 = findPaymentForMonths(state.bal, state.rate, 12);
+        if (payIn12 !== null && payIn12 > pay) {
+            const sim12 = calc(state.bal, state.rate, payIn12);
+            list.appendChild(createTacticEl(
+                'Debt-Free in 1 Year', '$' + Math.round(payIn12).toLocaleString() + '/mo required',
+                'SAVE $' + Math.round(res.int - sim12.int).toLocaleString(),
+                'clock'
+            ));
+        }
     }
 
     if (!list.firstChild) {
@@ -866,26 +1005,50 @@ function renderTactics(res, pay) {
     }
 }
 
-/** Build a tactic card using DOM methods — no innerHTML string concatenation. */
+/**
+ * Binary-search for the monthly payment that pays off a debt in exactly targetMonths.
+ * Returns null if no reasonable payment exists (e.g. would require > 100% of balance/mo).
+ *
+ * @param {number} b            Balance in dollars
+ * @param {number} r            Annual interest rate as a percentage
+ * @param {number} targetMonths e.g. 12
+ * @returns {number|null}
+ */
+function findPaymentForMonths(b, r, targetMonths) {
+    let lo = b * (r / 100 / 12) + 1; // just above monthly interest
+    let hi = b;                        // paying entire balance at once
+
+    for (let i = 0; i < 40; i++) {    // 40 iterations → accurate to < $0.01
+        const mid = (lo + hi) / 2;
+        const res = calc(b, r, mid);
+        if (!res.valid) { lo = mid; continue; }
+        if (res.m <= targetMonths) { hi = mid; } else { lo = mid; }
+    }
+
+    const result = calc(b, r, hi);
+    if (!result.valid || result.m > targetMonths) return null;
+    return Math.ceil(hi); // round up so payoff is guaranteed within target
+}
+
 function createTacticEl(title, desc, badge, iconKey) {
-    const card     = document.createElement('div');
-    card.className = 'card tactic-card';
+    const card         = document.createElement('div');
+    card.className     = 'card tactic-card';
 
     const iconWrap     = document.createElement('div');
     iconWrap.className = 'tactic-icon';
-    iconWrap.innerHTML = TACTIC_ICONS[iconKey] || ''; // trusted static strings only
+    iconWrap.innerHTML = TACTIC_ICONS[iconKey] || '';
 
-    const content    = document.createElement('div');
-    const titleEl    = document.createElement('div');
-    titleEl.className = 'tactic-title';
-    titleEl.textContent = title; // textContent: never parsed as HTML
+    const content      = document.createElement('div');
+    const titleEl      = document.createElement('div');
+    titleEl.className  = 'tactic-title';
+    titleEl.textContent = title;
 
-    const descEl     = document.createElement('div');
-    descEl.className = 'tactic-desc';
+    const descEl       = document.createElement('div');
+    descEl.className   = 'tactic-desc';
     descEl.textContent = desc;
 
-    const badgeEl    = document.createElement('span');
-    badgeEl.className = 'secure-badge tactic-badge';
+    const badgeEl      = document.createElement('span');
+    badgeEl.className  = 'secure-badge tactic-badge';
     badgeEl.textContent = badge;
 
     content.appendChild(titleEl);
@@ -893,25 +1056,37 @@ function createTacticEl(title, desc, badge, iconKey) {
     content.appendChild(badgeEl);
     card.appendChild(iconWrap);
     card.appendChild(content);
-
     return card;
 }
 
-// ─── MASTERY ─────────────────────────────────────────────────────────────────
+// ─── UTILIZATION SIMULATOR ───────────────────────────────────────────────────
+function onLimitChange() {
+    const limit = Math.max(100, parseFloat(document.getElementById('simLimit').value) || 10000);
+    // Persist credit limit separately from debt vault
+    localStorage.setItem('aura_credit_limit', limit);
+    // Update slider range to match new limit; keep balance proportion
+    const slider     = document.getElementById('simSlider');
+    const oldLimit   = parseFloat(slider.max) || 10000;
+    const oldBalance = parseFloat(slider.value) || 0;
+    const newBalance = Math.round((oldBalance / oldLimit) * limit);
+    slider.max   = limit;
+    slider.value = Math.min(newBalance, limit);
+    runSim(parseFloat(slider.value));
+}
+
 function runSim(val) {
-    const pct   = (val / 10000) * 100;
+    const limit = Math.max(100, parseFloat(document.getElementById('simLimit').value) || 10000);
+    const pct   = Math.min((val / limit) * 100, 100);
     const bar   = document.getElementById('simBar');
     const badge = document.getElementById('simScore');
     const track = document.querySelector('.progress-track');
     const input = document.getElementById('simSlider');
 
     document.getElementById('simVal').textContent =
-        '$' + Math.round(val).toLocaleString() + ' / $10k';
+        '$' + Math.round(val).toLocaleString() + ' / $' + Math.round(limit).toLocaleString();
+    document.getElementById('simPctLabel').textContent = pct.toFixed(1) + '% utilized';
 
     bar.style.width = pct + '%';
-
-    // Reset classes then apply the single correct status class
-    // No inline color assignments — all color is owned by CSS
     bar.className   = 'progress-bar';
     badge.className = 'sim-badge';
 
@@ -923,32 +1098,36 @@ function runSim(val) {
         bar.classList.add('status-healthy');
         badge.classList.add('status-healthy');
         badge.textContent = 'HEALTHY RANGE';
-    } else {
+    } else if (pct < 50) {
         bar.classList.add('status-risk');
         badge.classList.add('status-risk');
         badge.textContent = 'SCORE PENALTY RISK';
+    } else {
+        bar.classList.add('status-risk');
+        badge.classList.add('status-risk');
+        badge.textContent = 'HIGH IMPACT — PAY DOWN';
     }
 
-    // Keep ARIA in sync
     track.setAttribute('aria-valuenow', Math.round(pct));
     input.setAttribute('aria-valuenow', Math.round(val));
 }
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function setupSlider() {
-    const slider         = document.getElementById('slider');
+    const slider          = document.getElementById('slider');
     const monthlyInterest = state.bal * (state.rate / 100 / 12);
-    const minPay         = Math.ceil(Math.max(state.min, monthlyInterest + 1));
-    const rawMax         = Math.ceil(state.bal / 5);
-    const maxPay         = rawMax > minPay ? rawMax : minPay + 500;
+    const minPay          = Math.ceil(Math.max(state.min, monthlyInterest + 1));
+    const rawMax          = Math.ceil(state.bal / 5);
+    const maxPay          = rawMax > minPay ? rawMax : minPay + 500;
 
     slider.min   = minPay;
     slider.max   = maxPay;
-    slider.value = minPay + (maxPay - minPay) / 4;
+    // Start at minimum payment so the user sees the baseline (ring empty = room to improve)
+    slider.value = minPay;
 
     slider.setAttribute('aria-valuemin', minPay);
     slider.setAttribute('aria-valuemax', maxPay);
-    slider.setAttribute('aria-valuenow', Math.round(parseFloat(slider.value)));
+    slider.setAttribute('aria-valuenow', minPay);
 }
 
 function nav(viewId, btn) {
@@ -983,10 +1162,7 @@ function closeSettings() {
 }
 
 function handleModalKeydown(e) {
-    if (e.key === 'Escape') {
-        closeSettings();
-        return;
-    }
+    if (e.key === 'Escape') { closeSettings(); return; }
     if (e.key !== 'Tab') return;
 
     const modal     = document.getElementById('settingsModal');
@@ -995,11 +1171,9 @@ function handleModalKeydown(e) {
     const last      = focusable[focusable.length - 1];
 
     if (e.shiftKey && document.activeElement === first) {
-        last.focus();
-        e.preventDefault();
+        last.focus(); e.preventDefault();
     } else if (!e.shiftKey && document.activeElement === last) {
-        first.focus();
-        e.preventDefault();
+        first.focus(); e.preventDefault();
     }
 }
 
@@ -1018,8 +1192,6 @@ function clearModalError() {
 }
 
 // ─── BOOTSTRAP ───────────────────────────────────────────────────────────────
-// Set precise ring circumference immediately — avoids the ~0.318px approximation error
-// that comes from the CSS fallback value of 628.318.
 (function initRing() {
     const ring = document.getElementById('auraRing');
     ring.style.strokeDasharray  = RING_CIRC;
