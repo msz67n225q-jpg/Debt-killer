@@ -205,33 +205,54 @@ nav {
 
 /* ─── MISSION VIEW ─────────────────────────────────────────────────────────── */
 
-/* Freedom date hero */
-.freedom-hero {
-  text-align:center;
-  padding:36px 0 28px;
-  position:relative;
+/* Freedom ring */
+.ring-wrap {
+  position:relative; width:270px; height:270px;
+  margin:12px auto 0;
+  display:flex; align-items:center; justify-content:center;
 }
-.freedom-hero::before {
-  content:''; position:absolute;
-  top:50%; left:50%; transform:translate(-50%,-60%);
-  width:280px; height:280px; border-radius:50%;
-  background:radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 70%);
-  pointer-events:none;
+
+.ring-svg {
+  position:absolute; width:100%; height:100%;
+  transform:rotate(-90deg);
+  overflow:visible;
+}
+
+.ring-track {
+  fill:none; stroke:#1a1a22; stroke-width:7;
+}
+
+.ring-fill {
+  fill:none; stroke:url(#ringGrad); stroke-width:7;
+  stroke-linecap:round;
+  stroke-dasharray:628.318; /* exact 2πr for r=100 — overwritten by JS */
+  stroke-dashoffset:628.318; /* start empty */
+  filter:drop-shadow(0 0 12px rgba(99,102,241,.55));
+  transition:stroke-dashoffset .9s cubic-bezier(.16,1,.3,1);
+}
+
+.ring-content {
+  position:relative; text-align:center; z-index:1; pointer-events:none;
 }
 
 .freedom-label {
-  font-size:10px; font-weight:700; letter-spacing:2px;
-  color:var(--p1); text-transform:uppercase; margin-bottom:10px;
+  font-size:9px; font-weight:700; letter-spacing:2px;
+  color:var(--p1); text-transform:uppercase; margin-bottom:8px;
 }
 
 .freedom-date {
-  font-size:52px; font-weight:900; letter-spacing:-2px; line-height:1;
+  font-size:36px; font-weight:900; letter-spacing:-1.5px; line-height:1;
   background:linear-gradient(135deg,#fff 0%,#c4b5fd 50%,#e879f9 100%);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
 
 .freedom-sub {
-  font-size:15px; color:var(--dim2); margin-top:10px; font-weight:500;
+  font-size:12px; color:var(--dim2); margin-top:6px; font-weight:500;
+}
+
+.ring-eff {
+  font-size:11px; font-weight:700; color:var(--p1);
+  margin-top:6px; opacity:.8;
 }
 
 /* Burn ticker */
@@ -593,11 +614,27 @@ input[type=range]:focus { outline:none; }
       <!-- Content shown when debts exist -->
       <div id="mission-data">
 
-        <!-- Freedom date hero -->
-        <div class="freedom-hero">
-          <div class="freedom-label">DEBT FREE DATE</div>
-          <div class="freedom-date" id="m-date">—</div>
-          <div class="freedom-sub" id="m-sub">calculating...</div>
+        <!-- Freedom ring hero -->
+        <div class="ring-wrap" aria-hidden="true">
+          <svg class="ring-svg" viewBox="0 0 240 240">
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%"   stop-color="#6366f1"/>
+                <stop offset="50%"  stop-color="#a855f7"/>
+                <stop offset="100%" stop-color="#ec4899"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="120" cy="120" r="100"/>
+            <circle class="ring-fill"  cx="120" cy="120" r="100" id="ring-circle"/>
+          </svg>
+          <div class="ring-content">
+            <div class="freedom-label">DEBT FREE</div>
+            <div class="freedom-date" id="m-date">—</div>
+            <div class="freedom-sub"  id="m-sub">—</div>
+            <div class="ring-eff"     id="m-eff"></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-bottom:4px">
           <div class="burn-ticker" id="m-burn">
             <div class="burn-dot"></div>
             <span id="m-burn-val">$0.00/day in interest</span>
@@ -1016,6 +1053,20 @@ function renderMission(sim) {
   set('m-date', dateStr);
   set('m-sub',  subStr);
 
+  // ── Freedom ring ─────────────────────────────────────────────────────────
+  // Ring fill = payoff efficiency: what % of total payments goes to principal.
+  // More efficient plan (extra payments, right strategy) → ring fills more.
+  // Formula: totalDebt / (totalDebt + totalInterest)
+  // Typical range: ~55% (high-rate, min payment) → ~95% (aggressive payoff)
+  const totalDebt  = S.debts.reduce((s,d) => s + d.balance, 0);
+  const efficiency = (totalDebt + sim.totalInterest) > 0
+    ? totalDebt / (totalDebt + sim.totalInterest)
+    : 0;
+  const RING_CIRC = 2 * Math.PI * 100;
+  document.getElementById('ring-circle').style.strokeDashoffset =
+    RING_CIRC * (1 - efficiency);
+  set('m-eff', Math.round(efficiency * 100) + '% goes to principal');
+
   // Daily interest burn (based on current balances)
   const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
   set('m-burn-val', `$${fmt(dailyBurn, 2)}/day in interest`);
@@ -1418,6 +1469,16 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── BOOTSTRAP ─────────────────────────────────────────────────────────────
+// Set precise ring circumference immediately — avoids the ~0.318px CSS approximation
+(function() {
+  const CIRC = 2 * Math.PI * 100;
+  const ring = document.getElementById('ring-circle');
+  if (ring) {
+    ring.style.strokeDasharray  = CIRC;
+    ring.style.strokeDashoffset = CIRC; // start fully empty
+  }
+}());
+
 load();
 render();
 
