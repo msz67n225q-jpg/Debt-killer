@@ -255,11 +255,33 @@ nav {
   margin-top:6px; opacity:.8;
 }
 
+/* Payment slider card on Mission */
+.pay-card {
+  background:var(--s0); border:1px solid var(--border);
+  border-radius:20px; padding:20px 20px 14px;
+  margin:16px 0 12px;
+}
+.pay-row {
+  display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;
+}
+.pay-label { font-size:10px; font-weight:700; color:var(--dim); letter-spacing:1.5px; text-transform:uppercase; }
+.pay-amount { font-size:28px; font-weight:900; letter-spacing:-1px; }
+.pay-sublabel { font-size:11px; color:var(--dim); margin-top:6px; display:flex; justify-content:space-between; }
+
+/* Savings stat cards — respond to slider */
+.save-card {
+  background:var(--s0); border:1px solid var(--border);
+  border-radius:16px; padding:14px;
+}
+.save-card .label { font-size:10px; font-weight:600; color:var(--dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:5px; }
+.save-card .val   { font-size:22px; font-weight:900; }
+.save-card .sub   { font-size:10px; color:var(--dim); margin-top:3px; }
+
 /* Burn ticker */
 .burn-ticker {
   display:inline-flex; align-items:center; gap:8px;
   background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2);
-  border-radius:100px; padding:8px 16px; margin-top:20px;
+  border-radius:100px; padding:8px 16px; margin-top:16px;
   font-size:13px; font-weight:600; color:var(--red);
 }
 .burn-dot {
@@ -634,14 +656,45 @@ input[type=range]:focus { outline:none; }
             <div class="ring-eff"     id="m-eff"></div>
           </div>
         </div>
-        <div style="text-align:center;margin-bottom:4px">
+        <!-- Burn ticker -->
+        <div style="text-align:center">
           <div class="burn-ticker" id="m-burn">
             <div class="burn-dot"></div>
             <span id="m-burn-val">$0.00/day in interest</span>
           </div>
         </div>
 
-        <!-- Stat grid -->
+        <!-- ★ INTERACTIVE payment slider — the core of the app ★ -->
+        <div class="pay-card">
+          <div class="pay-row">
+            <span class="pay-label">MONTHLY PAYMENT</span>
+            <span class="pay-amount" id="m-pay-amount">$0</span>
+          </div>
+          <input type="range" id="m-slider"
+                 min="0" max="2000" step="10" value="0"
+                 oninput="missionSlider(+this.value)"
+                 aria-label="Total monthly payment amount">
+          <div class="pay-sublabel">
+            <span id="m-slider-min-lbl">Min $0</span>
+            <span id="m-slider-max-lbl">$2,000</span>
+          </div>
+        </div>
+
+        <!-- Savings vs minimum payments — both start $0 / 0mo and fill as you drag -->
+        <div class="grid2">
+          <div class="save-card">
+            <div class="label">INTEREST SAVED</div>
+            <div class="val grn" id="m-int-saved">$0</div>
+            <div class="sub">vs minimum only</div>
+          </div>
+          <div class="save-card">
+            <div class="label">TIME SAVED</div>
+            <div class="val" id="m-time-saved">0 mo</div>
+            <div class="sub">vs minimum only</div>
+          </div>
+        </div>
+
+        <!-- Totals -->
         <div class="grid2">
           <div class="stat-card">
             <div class="label">TOTAL DEBT</div>
@@ -651,19 +704,7 @@ input[type=range]:focus { outline:none; }
           <div class="stat-card">
             <div class="label">TOTAL INTEREST</div>
             <div class="val red" id="m-total-int">$0</div>
-            <div class="sub">at current payments</div>
-          </div>
-        </div>
-        <div class="grid2">
-          <div class="stat-card">
-            <div class="label">MONTHS LEFT</div>
-            <div class="val" id="m-months">0</div>
-            <div class="sub" id="m-months-sub">to debt freedom</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">MONTHLY COST</div>
-            <div class="val" id="m-monthly">$0</div>
-            <div class="sub">minimums + extra</div>
+            <div class="sub">at this payment</div>
           </div>
         </div>
 
@@ -719,23 +760,6 @@ input[type=range]:focus { outline:none; }
         </button>
       </div>
       <div class="strategy-explain" id="plan-explain"></div>
-
-      <!-- Extra payment -->
-      <div class="sect">EXTRA MONTHLY PAYMENT</div>
-      <div class="card" style="padding-bottom:14px">
-        <div class="extra-header">
-          <span class="extra-label">EXTRA / MO</span>
-          <div class="extra-amount">
-            $<span id="p-extra-val">0</span>
-            <span id="p-extra-impact"></span>
-          </div>
-        </div>
-        <input type="range" id="p-extra-slider" min="0" max="1000" step="10" value="0"
-               oninput="setExtra(+this.value)" aria-label="Extra monthly payment">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:4px">
-          <span>$0</span><span id="p-slider-max">$1,000</span>
-        </div>
-      </div>
 
       <!-- Payoff order -->
       <div class="sect">PAYOFF ORDER</div>
@@ -1040,44 +1064,78 @@ function renderMission(sim) {
   data.classList.toggle('hidden', !hasData);
   if (!hasData) return;
 
-  // Freedom date
-  const fd = new Date();
-  fd.setMonth(fd.getMonth() + sim.totalMonths);
-  const dateStr = fd.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  // ── Baseline (minimum payments only) for comparison ──────────────────────
+  const simMin    = simulate(S.debts, 0, S.strategy);
+  const totalDebt = S.debts.reduce((s,d) => s + d.balance, 0);
+  const totalMin  = S.debts.reduce((s,d) => s + d.minPayment, 0);
 
+  // ── Payment slider setup ──────────────────────────────────────────────────
+  // Slider shows TOTAL monthly payment (minimums + extra).
+  // Max = totalMin + sensible extra ceiling (debt/6 rounded up to nearest 50).
+  const extraCeil = Math.ceil((totalDebt / 6) / 50) * 50;
+  const sliderMax = totalMin + Math.max(extraCeil, 500);
+  const sliderVal = totalMin + S.extra;
+
+  const slider = document.getElementById('m-slider');
+  slider.min   = totalMin;
+  slider.max   = sliderMax;
+  slider.value = Math.min(sliderVal, sliderMax);
+
+  set('m-slider-min-lbl', 'Min $' + fmtK(totalMin));
+  set('m-slider-max-lbl', '$'     + fmtK(sliderMax));
+  set('m-pay-amount',     '$'     + fmtK(sliderVal));
+
+  // ── Freedom ring ──────────────────────────────────────────────────────────
+  // Ring fill = time savings ratio vs minimum-only payments.
+  // At $0 extra → 15% fill (baseline, not demoralising).
+  // As you drag the slider right → ring fills toward 100%.
+  // Formula:  fill = 0.15 + 0.85 × (1 − sim.totalMonths / simMin.totalMonths)
+  const RING_CIRC = 2 * Math.PI * 100;
+  const timeSaved = simMin && simMin.totalMonths > 0
+    ? Math.max(0, 1 - sim.totalMonths / simMin.totalMonths)
+    : 0;
+  const ringFill = 0.15 + 0.85 * Math.min(timeSaved, 1);
+  document.getElementById('ring-circle').style.strokeDashoffset =
+    RING_CIRC * (1 - ringFill);
+
+  // ── Freedom date (inside ring) ────────────────────────────────────────────
   const m = sim.totalMonths;
-  const subStr = m < 24
-    ? `${m} months until you're debt free`
-    : `${(m/12).toFixed(1)} years until you're debt free`;
+  const fd = new Date();
+  fd.setMonth(fd.getMonth() + m);
+  const dateStr = fd.toLocaleDateString('en-US', { month:'short', year:'numeric' });
+  const subStr  = m < 24
+    ? m + ' month' + (m === 1 ? '' : 's') + ' away'
+    : (m / 12).toFixed(1) + ' years away';
 
   set('m-date', dateStr);
   set('m-sub',  subStr);
 
-  // ── Freedom ring ─────────────────────────────────────────────────────────
-  // Ring fill = payoff efficiency: what % of total payments goes to principal.
-  // More efficient plan (extra payments, right strategy) → ring fills more.
-  // Formula: totalDebt / (totalDebt + totalInterest)
-  // Typical range: ~55% (high-rate, min payment) → ~95% (aggressive payoff)
-  const totalDebt  = S.debts.reduce((s,d) => s + d.balance, 0);
-  const efficiency = (totalDebt + sim.totalInterest) > 0
-    ? totalDebt / (totalDebt + sim.totalInterest)
-    : 0;
-  const RING_CIRC = 2 * Math.PI * 100;
-  document.getElementById('ring-circle').style.strokeDashoffset =
-    RING_CIRC * (1 - efficiency);
-  set('m-eff', Math.round(efficiency * 100) + '% goes to principal');
+  // Ring label: show time saved when extra > $0, otherwise nudge to drag
+  if (S.extra > 0 && simMin) {
+    const moSaved = simMin.totalMonths - m;
+    set('m-eff', moSaved > 0 ? '−' + moSaved + ' mo vs minimum' : 'optimised');
+  } else {
+    set('m-eff', 'drag slider to optimise ↑');
+  }
 
-  // Daily interest burn (based on current balances)
+  // ── Savings vs minimum ────────────────────────────────────────────────────
+  const intSaved  = simMin ? Math.max(0, simMin.totalInterest - sim.totalInterest) : 0;
+  const moSaved   = simMin ? Math.max(0, simMin.totalMonths   - m)                 : 0;
+  const moSavedStr = moSaved === 0 ? '0 mo'
+    : moSaved < 24 ? moSaved + ' mo'
+    : (moSaved / 12).toFixed(1) + ' yrs';
+
+  set('m-int-saved',  intSaved > 0 ? '$' + fmtK(intSaved) : '$0');
+  set('m-time-saved', moSavedStr);
+
+  // ── Daily interest burn (current balances) ────────────────────────────────
   const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
-  set('m-burn-val', `$${fmt(dailyBurn, 2)}/day in interest`);
+  set('m-burn-val', '$' + fmt(dailyBurn, 2) + '/day in interest');
 
-  // Stats (totalDebt already declared above for ring calculation)
-  const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
-  set('m-total-debt',  '$' + fmtK(totalDebt));
-  set('m-total-int',   '$' + fmtK(sim.totalInterest));
-  set('m-months',      m.toString());
-  set('m-debt-count',  S.debts.length + ' account' + (S.debts.length !== 1 ? 's' : ''));
-  set('m-monthly',     '$' + fmtK(totalMin + S.extra));
+  // ── Totals ────────────────────────────────────────────────────────────────
+  set('m-total-debt', '$' + fmtK(totalDebt));
+  set('m-total-int',  '$' + fmtK(sim.totalInterest));
+  set('m-debt-count', S.debts.length + ' account' + (S.debts.length !== 1 ? 's' : ''));
 
   // Timeline
   const tl = document.getElementById('m-timeline');
@@ -1186,44 +1244,17 @@ function renderPlan(sim, simAlt) {
 
   planEmpty.classList.toggle('hidden', hasDebts);
   document.getElementById('plan-compare').classList.toggle('hidden', !hasDebts || !sim);
-  document.querySelector('.sect').style.display = ''; // always show
 
   // Strategy toggle state
   document.getElementById('opt-avalanche').classList.toggle('active', S.strategy === 'avalanche');
-  document.getElementById('opt-snowball').classList.toggle('active', S.strategy === 'snowball');
+  document.getElementById('opt-snowball').classList.toggle('active',  S.strategy === 'snowball');
 
   // Strategy explanation
   const explains = {
-    avalanche: '<strong>Avalanche:</strong> Pay minimums on all debts, then throw everything at the <strong>highest-interest debt first</strong>. Mathematically optimal — saves the most money.',
-    snowball:  '<strong>Snowball:</strong> Pay minimums on all debts, then attack the <strong>smallest balance first</strong>. Builds momentum with quick wins. Proven to keep people motivated.',
+    avalanche: '<strong>Avalanche:</strong> Minimum payments on all debts, everything extra attacks the <strong>highest-rate debt first</strong>. Mathematically saves the most money.',
+    snowball:  '<strong>Snowball:</strong> Minimum payments on all debts, everything extra attacks the <strong>smallest balance first</strong>. Quick wins build momentum — proven to keep people on track.',
   };
   document.getElementById('plan-explain').innerHTML = explains[S.strategy];
-
-  // Extra slider
-  if (hasDebts) {
-    const maxExtra = Math.ceil(S.debts.reduce((s,d) => s + d.balance, 0) / 12 / 10) * 10;
-    const slider   = document.getElementById('p-extra-slider');
-    slider.max     = maxExtra;
-    set('p-slider-max', '$' + fmtK(maxExtra));
-    slider.value   = Math.min(S.extra, maxExtra);
-  }
-
-  set('p-extra-val', S.extra.toLocaleString());
-
-  // Impact text on extra payment
-  if (sim && simAlt && S.extra > 0) {
-    const simBase = simulate(S.debts, 0, S.strategy);
-    if (simBase) {
-      const saved  = simBase.totalInterest - sim.totalInterest;
-      const months = simBase.totalMonths - sim.totalMonths;
-      set('p-extra-impact',
-        saved > 0
-          ? ` · saves $${fmtK(saved)} · −${months} mo`
-          : '');
-    }
-  } else {
-    set('p-extra-impact', '');
-  }
 
   if (!hasDebts || !sim) {
     document.getElementById('p-order').innerHTML = '';
@@ -1233,27 +1264,19 @@ function renderPlan(sim, simAlt) {
   // Strategy comparison banner
   const banner = document.getElementById('plan-compare');
   if (simAlt) {
-    const intDiff   = simAlt.totalInterest - sim.totalInterest;
-    const monDiff   = simAlt.totalMonths   - sim.totalMonths;
-    const isBetter  = intDiff > 0;
-    const altName   = S.strategy === 'avalanche' ? 'Snowball' : 'Avalanche';
-    const curName   = S.strategy === 'avalanche' ? 'Avalanche' : 'Snowball';
+    const intDiff  = simAlt.totalInterest - sim.totalInterest;
+    const monDiff  = simAlt.totalMonths   - sim.totalMonths;
+    const isBetter = intDiff > 0;
+    const altName  = S.strategy === 'avalanche' ? 'Snowball' : 'Avalanche';
+    const curName  = S.strategy === 'avalanche' ? 'Avalanche' : 'Snowball';
     banner.className = 'compare-banner' + (isBetter ? '' : ' warn');
-    if (isBetter) {
-      banner.innerHTML = `
-        <div class="compare-title">✓ ${curName} is saving you more</div>
-        <div class="compare-body">
-          $${fmtK(Math.abs(intDiff))} less interest vs ${altName}
-          <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} faster</span>
-        </div>`;
-    } else {
-      banner.innerHTML = `
-        <div class="compare-title">⚡ Switch to ${altName} to save more</div>
-        <div class="compare-body">
-          $${fmtK(Math.abs(intDiff))} more interest with ${curName}
-          <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} longer</span>
-        </div>`;
-    }
+    banner.innerHTML = isBetter
+      ? `<div class="compare-title">✓ ${curName} saves you more</div>
+         <div class="compare-body">$${fmtK(Math.abs(intDiff))} less interest
+           <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} faster than ${altName}</span></div>`
+      : `<div class="compare-title">⚡ Switch to ${altName} to save more</div>
+         <div class="compare-body">$${fmtK(Math.abs(intDiff))} extra interest with ${curName}
+           <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} longer</span></div>`;
   }
 
   // Payoff order list
@@ -1261,13 +1284,12 @@ function renderPlan(sim, simAlt) {
   const ol     = document.getElementById('p-order');
   ol.innerHTML = '';
   order.forEach((id, i) => {
-    const d       = S.debts.find(x => x.id === id);
+    const d = S.debts.find(x => x.id === id);
     if (!d) return;
     const payMonth = sim.payoffMonths[d.id] ?? sim.totalMonths;
     const pd = new Date();
     pd.setMonth(pd.getMonth() + payMonth);
     const payStr = pd.toLocaleDateString('en-US', { month:'short', year:'numeric' });
-
     const li = document.createElement('li');
     li.innerHTML = `
       <div class="po-num c${d.colorIdx % COLORHEX.length}">${i+1}</div>
@@ -1275,10 +1297,19 @@ function renderPlan(sim, simAlt) {
         <div class="po-name">${esc(d.name)}</div>
         <div class="po-rate">${d.rate}% APR · $${fmtK(d.balance)}</div>
       </div>
-      <div class="po-date">${payStr}</div>
-    `;
+      <div class="po-date">${payStr}</div>`;
     ol.appendChild(li);
   });
+}
+
+// ─── MISSION SLIDER ────────────────────────────────────────────────────────
+// Called when the user drags the payment slider on the Mission view.
+// Converts total payment → extra (total minus sum of all minimums).
+function missionSlider(totalPay) {
+  const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
+  S.extra = Math.max(0, Math.round(totalPay - totalMin));
+  save();
+  render();
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
