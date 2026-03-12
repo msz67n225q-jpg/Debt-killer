@@ -1071,9 +1071,8 @@ function renderMission(sim) {
   const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
   set('m-burn-val', `$${fmt(dailyBurn, 2)}/day in interest`);
 
-  // Stats
-  const totalDebt    = S.debts.reduce((s,d) => s + d.balance, 0);
-  const totalMin     = S.debts.reduce((s,d) => s + d.minPayment, 0);
+  // Stats (totalDebt already declared above for ring calculation)
+  const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
   set('m-total-debt',  '$' + fmtK(totalDebt));
   set('m-total-int',   '$' + fmtK(sim.totalInterest));
   set('m-months',      m.toString());
