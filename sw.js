@@ -1,7 +1,7 @@
 // ZERO — Service Worker
 // Cache-first for app shell; network-first for everything else.
 
-const CACHE = 'zero-v1';
+const CACHE = 'zero-v3';
 const SHELL = [
   '/',
   '/index.html',
@@ -36,17 +36,30 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // index.html: network-first so updates are always picked up
+  const isHTML = e.request.url.endsWith('/') || e.request.url.endsWith('.html');
+  if (isHTML) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Everything else: cache-first, populate on miss
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        // Cache successful responses for future offline use
         if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/index.html')); // fallback to app shell
+      }).catch(() => caches.match('/index.html'));
     })
   );
 });
