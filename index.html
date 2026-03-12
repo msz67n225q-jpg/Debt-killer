@@ -3,8 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a0812">
+
+<!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ZERO">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+<!-- SEO / share -->
+<meta name="description" content="Crush every debt. See your freedom date. Pay less interest.">
+<meta property="og:title" content="ZERO — Debt Elimination Engine">
+<meta property="og:description" content="Crush every debt. See your freedom date. Pay less interest.">
+<meta property="og:type" content="website">
+
 <title>ZERO — Kill Your Debt</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -1609,6 +1624,13 @@ document.addEventListener('keydown', e => {
 
 load();
 render();
+
+// ── Service Worker registration ─────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {/* silent fail in dev */});
+  });
+}
 
 </script>
 </body>
