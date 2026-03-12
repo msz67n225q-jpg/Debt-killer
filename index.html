@@ -1,1202 +1,1426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
-    <title>AURA ECLIPSE – Debt Payoff Calculator</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>ZERO — Kill Your Debt</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-        :root {
-            --bg:          #000000;
-            --surface:     #0a0a0c;
-            --border:      rgba(255, 255, 255, 0.1);
-            --accent:      #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.6);
-            --gold:        #D4AF37;
-            --danger:      #ef4444;
-            --success:     #10b981;
-            --text:        #ffffff;
-            --text-dim:    #999999;
-            --focus-ring:  0 0 0 3px rgba(99, 102, 241, 0.6);
-        }
+/* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
+:root {
+  --bg:       #000;
+  --s0:       #0a0a0c;
+  --s1:       #111116;
+  --s2:       #1a1a22;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #fff;
+  --dim:      #666;
+  --dim2:     #999;
+  --red:      #ef4444;
+  --green:    #10b981;
+  --gold:     #f59e0b;
+  --blue:     #3b82f6;
+  --p1:       #6366f1;
+  --p2:       #a855f7;
+  --p3:       #ec4899;
+  --glow:     rgba(99,102,241,0.5);
+}
 
-        *, *::before, *::after { box-sizing: border-box; }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0; padding: 0; overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
+html,body {
+  height:100%; background:var(--bg); color:var(--text);
+  font-family:'Inter',-apple-system,sans-serif;
+  -webkit-tap-highlight-color:transparent; user-select:none;
+  overflow:hidden;
+}
 
-        :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 4px; }
+button {
+  background:none; border:none; cursor:pointer;
+  font-family:inherit; color:inherit; padding:0;
+}
 
-        button {
-            background: none; border: none; cursor: pointer;
-            color: inherit; font-family: inherit; font-size: inherit; padding: 0; margin: 0;
-        }
+:focus-visible { outline:2px solid var(--p1); outline-offset:3px; border-radius:6px; }
 
-        /* ── LAYOUT ─────────────────────────────────────────── */
-        .app-shell {
-            display: flex; flex-direction: column;
-            height: 100vh; height: 100dvh; position: relative;
-        }
+/* ─── LAYOUT ───────────────────────────────────────────────────────────────── */
+#app {
+  display:flex; flex-direction:column;
+  height:100dvh; position:relative;
+}
 
-        header {
-            padding: 20px 25px;
-            padding-top: max(20px, env(safe-area-inset-top));
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border); z-index: 50;
-        }
+/* ─── SPLASH ───────────────────────────────────────────────────────────────── */
+#splash {
+  position:fixed; inset:0; z-index:900;
+  background:#000;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;
+  transition:opacity .5s ease, transform .5s cubic-bezier(.8,0,.2,1);
+}
+#splash.out { opacity:0; transform:scale(1.04); pointer-events:none; }
 
-        .brand { font-size: 13px; letter-spacing: 3px; font-weight: 800; text-transform: uppercase; }
+.splash-logo {
+  width:72px; height:72px; position:relative; margin-bottom:28px;
+}
+.splash-logo svg { width:100%; height:100%; }
 
-        .secure-badge {
-            font-size: 9px; color: var(--success);
-            border: 1px solid rgba(16,185,129,0.3);
-            padding: 2px 6px; border-radius: 4px;
-            margin-left: 8px; vertical-align: middle;
-        }
+.splash-wordmark {
+  font-size:42px; font-weight:900; letter-spacing:-2px;
+  background:linear-gradient(135deg,#fff 0%,#aaa 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.splash-sub {
+  font-size:13px; color:var(--dim2); letter-spacing:.5px; margin-top:8px;
+}
 
-        .icon-btn {
-            display: flex; align-items: center; justify-content: center;
-            width: 40px; height: 40px; border-radius: 50%; color: var(--text-dim);
-            transition: color 0.2s, background 0.2s;
-        }
-        .icon-btn:hover, .icon-btn:focus-visible { color: var(--text); background: rgba(255,255,255,0.05); }
-        .icon-btn svg { width: 20px; height: 20px; pointer-events: none; }
+.splash-btn {
+  margin-top:52px;
+  padding:16px 48px;
+  background:var(--text); color:#000;
+  border-radius:100px; font-size:14px; font-weight:700; letter-spacing:1px;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 0 40px rgba(255,255,255,0.15);
+}
+.splash-btn:hover { transform:scale(1.03); box-shadow:0 0 60px rgba(255,255,255,0.25); }
+.splash-btn:active { transform:scale(0.97); }
 
-        /* ── VIEWPORT ───────────────────────────────────────── */
-        .view-stack { flex: 1; position: relative; overflow: hidden; }
+/* ─── HEADER ───────────────────────────────────────────────────────────────── */
+header {
+  padding: 18px 22px;
+  padding-top: max(18px, env(safe-area-inset-top));
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,.7); backdrop-filter:blur(20px);
+  flex-shrink:0; z-index:50;
+}
 
-        .view {
-            position: absolute; inset: 0;
-            overflow-y: auto; overflow-x: hidden;
-            padding: 20px; padding-bottom: 120px;
-            opacity: 0; pointer-events: none; transform: scale(0.96);
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .view.active { opacity: 1; pointer-events: auto; transform: scale(1); z-index: 10; }
+.wordmark { font-size:18px; font-weight:900; letter-spacing:-1px; }
 
-        /* ── CARDS ──────────────────────────────────────────── */
-        .card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 24px; padding: 24px; margin-bottom: 20px;
-            position: relative; overflow: hidden;
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8);
-        }
+.header-right { display:flex; gap:8px; }
 
-        .label {
-            font-size: 10px; font-weight: 600; color: var(--text-dim);
-            letter-spacing: 1.5px; text-transform: uppercase;
-            margin-bottom: 8px; display: block;
-        }
+.icon-btn {
+  width:38px; height:38px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--dim2); transition:color .2s,background .2s;
+}
+.icon-btn:hover { color:var(--text); background:rgba(255,255,255,.06); }
+.icon-btn svg { width:18px; height:18px; pointer-events:none; }
 
-        /* Reusable stat row — replaces repeated inline styles in cards */
-        .stat-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0;
-        }
-        .stat-row + .stat-row { border-top: 1px solid #1a1a1a; }
-        .stat-row-label { color: #888; font-size: 14px; }
-        .stat-row-value { font-weight: 600; font-size: 14px; }
+.add-btn-header {
+  height:34px; padding:0 16px; border-radius:100px;
+  background:var(--p1); color:#fff;
+  font-size:13px; font-weight:600; letter-spacing:.3px;
+  display:flex; align-items:center; gap:6px;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 0 20px rgba(99,102,241,.3);
+}
+.add-btn-header:hover { transform:scale(1.04); box-shadow:0 0 30px rgba(99,102,241,.5); }
+.add-btn-header:active { transform:scale(0.97); }
+.add-btn-header svg { width:14px; height:14px; }
 
-        /* ── ECLIPSE RING ───────────────────────────────────── */
-        .eclipse-wrapper {
-            position: relative; width: 260px; height: 260px;
-            margin: 20px auto 10px;
-            display: flex; align-items: center; justify-content: center;
-        }
+/* ─── VIEW STACK ───────────────────────────────────────────────────────────── */
+.views {
+  flex:1; position:relative; overflow:hidden;
+}
 
-        .eclipse-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .ring-track  { fill: none; stroke: #1a1a1a; stroke-width: 6; }
-        .ring-active {
-            fill: none; stroke: url(#auraGradient); stroke-width: 6;
-            stroke-linecap: round;
-            /* Precise values set by JS at bootstrap — CSS values are fallbacks */
-            stroke-dasharray: 628.318;
-            stroke-dashoffset: 628.318; /* start empty */
-            filter: drop-shadow(0 0 8px var(--accent-glow));
-            transition: stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+.view {
+  position:absolute; inset:0;
+  overflow-y:auto; overflow-x:hidden;
+  padding:20px 18px 110px;
+  opacity:0; pointer-events:none;
+  transform:translateY(10px);
+  transition:opacity .3s ease, transform .3s ease;
+  will-change:opacity,transform;
+}
+.view.active {
+  opacity:1; pointer-events:auto; transform:translateY(0);
+}
 
-        .eclipse-content {
-            position: absolute; text-align: center;
-            display: flex; flex-direction: column; align-items: center;
-        }
+/* ─── NAV ──────────────────────────────────────────────────────────────────── */
+nav {
+  position:absolute; bottom:0; left:0; right:0;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  display:flex; justify-content:center; z-index:100;
+  pointer-events:none;
+}
 
-        .hero-date { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff; text-shadow: 0 0 20px rgba(99,102,241,0.3); }
-        .hero-sub  { font-size: 12px; color: var(--text-dim); margin-top: 4px; font-weight: 500; }
+.nav-pill {
+  pointer-events:auto;
+  background:rgba(14,14,18,.92); backdrop-filter:blur(24px);
+  border:1px solid var(--border2); border-radius:100px;
+  padding:6px; display:flex; gap:4px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
 
-        /* Optimization % badge below ring */
-        .ring-opt-pct {
-            text-align: center; margin-top: 8px; margin-bottom: 24px;
-            font-size: 11px; font-weight: 600; letter-spacing: 1px;
-            color: var(--accent); opacity: 0.8;
-        }
+.nav-tab {
+  display:flex; flex-direction:column; align-items:center;
+  gap:3px; padding:8px 22px; border-radius:100px;
+  color:var(--dim); font-size:10px; font-weight:600; letter-spacing:.5px;
+  transition:color .2s, background .2s;
+}
+.nav-tab svg { width:18px; height:18px; transition:color .2s; }
+.nav-tab.active {
+  color:#fff; background:rgba(255,255,255,.08);
+}
+.nav-tab.active svg { color:var(--p1); }
 
-        /* ── SLIDER ─────────────────────────────────────────── */
-        .slider-wrap { position: relative; padding: 15px 0; }
+/* ─── CARDS ────────────────────────────────────────────────────────────────── */
+.card {
+  background:var(--s0); border:1px solid var(--border);
+  border-radius:20px; padding:20px;
+  margin-bottom:14px;
+}
 
-        input[type=range] {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
-            background: #ffffff; box-shadow: 0 0 20px rgba(255,255,255,0.4);
-            margin-top: -13px; transform: scale(1); transition: transform 0.1s;
-        }
-        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #333; border-radius: 2px; }
-        input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 20px rgba(255,255,255,0.4), var(--focus-ring); }
+.card-sm { padding:14px 16px; border-radius:16px; }
 
-        /* ── STATUS CLASSES ─────────────────────────────────── */
-        .status-elite   { color: var(--success) !important; }
-        .status-healthy { color: var(--accent)  !important; }
-        .status-risk    { color: var(--danger)   !important; }
+/* ─── SECTION LABEL ────────────────────────────────────────────────────────── */
+.sect {
+  font-size:10px; font-weight:700; color:var(--dim);
+  letter-spacing:1.5px; text-transform:uppercase;
+  margin:24px 0 10px;
+}
+.sect:first-child { margin-top:0; }
 
-        .progress-bar                { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
-        .progress-bar.status-elite  { background: var(--success); }
-        .progress-bar.status-healthy { background: var(--accent); }
-        .progress-bar.status-risk   { background: var(--danger); }
+/* ─── STAT ROW ─────────────────────────────────────────────────────────────── */
+.row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:11px 0;
+}
+.row + .row { border-top:1px solid var(--s2); }
+.row-label { font-size:13px; color:var(--dim2); }
+.row-val { font-size:14px; font-weight:600; }
 
-        .sim-badge { font-size: 10px; background: #222; padding: 3px 8px; border-radius: 4px; }
+/* ─── GRID ─────────────────────────────────────────────────────────────────── */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
 
-        /* ── MASTERY ────────────────────────────────────────── */
-        .mastery-card {
-            background: linear-gradient(135deg, #111, #161616);
-            border: 1px solid var(--border); border-left: 3px solid var(--gold);
-            cursor: pointer; transition: transform 0.2s, background 0.2s;
-            padding: 20px; margin-bottom: 15px; border-radius: 20px;
-            width: 100%; text-align: left; display: block;
-        }
-        .mastery-card:active, .mastery-card:focus-visible { transform: scale(0.98); background: #1a1a1a; }
+.stat-card {
+  background:var(--s0); border:1px solid var(--border);
+  border-radius:16px; padding:14px;
+}
+.stat-card .label { font-size:10px; font-weight:600; color:var(--dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+.stat-card .val   { font-size:20px; font-weight:800; }
+.stat-card .sub   { font-size:10px; color:var(--dim); margin-top:3px; }
 
-        .util-sim {
-            background: rgba(255,255,255,0.03); border-radius: 16px;
-            padding: 20px; border: 1px solid var(--border); margin-bottom: 30px;
-        }
-        .progress-track {
-            height: 6px; background: #222; border-radius: 3px;
-            margin: 12px 0; overflow: hidden;
-        }
+/* ─── MISSION VIEW ─────────────────────────────────────────────────────────── */
 
-        /* Inline limit input in utilization sim */
-        .limit-input {
-            background: transparent; border: none; border-bottom: 1px solid #333;
-            color: #fff; font-family: inherit; font-size: 14px; font-weight: 600;
-            width: 80px; text-align: right; padding: 2px 0;
-        }
-        .limit-input:focus { outline: none; border-color: var(--accent); }
+/* Freedom date hero */
+.freedom-hero {
+  text-align:center;
+  padding:36px 0 28px;
+  position:relative;
+}
+.freedom-hero::before {
+  content:''; position:absolute;
+  top:50%; left:50%; transform:translate(-50%,-60%);
+  width:280px; height:280px; border-radius:50%;
+  background:radial-gradient(circle,rgba(99,102,241,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
 
-        /* ── NAVIGATION ─────────────────────────────────────── */
-        .nav-dock {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(20,20,20,0.9); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 32px;
-            padding: 0 20px; height: 64px;
-            display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 100;
-        }
+.freedom-label {
+  font-size:10px; font-weight:700; letter-spacing:2px;
+  color:var(--p1); text-transform:uppercase; margin-bottom:10px;
+}
 
-        .nav-btn {
-            width: 44px; height: 44px; display: flex;
-            align-items: center; justify-content: center;
-            border-radius: 50%; color: var(--text-dim); transition: 0.3s;
-        }
-        .nav-btn svg { width: 20px; height: 20px; pointer-events: none; }
-        .nav-btn.active { color: #fff; background: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
-        .nav-btn.gold.active { background: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.4); color: #000; }
+.freedom-date {
+  font-size:52px; font-weight:900; letter-spacing:-2px; line-height:1;
+  background:linear-gradient(135deg,#fff 0%,#c4b5fd 50%,#e879f9 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
 
-        /* ── SPLASH SCREEN ──────────────────────────────────── */
-        .secure-layer {
-            position: fixed; inset: 0; background: #000; z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: transform 0.4s cubic-bezier(0.8, 0, 0.2, 1);
-        }
-        .secure-layer.hidden { transform: translateY(-100%); pointer-events: none; }
+.freedom-sub {
+  font-size:15px; color:var(--dim2); margin-top:10px; font-weight:500;
+}
 
-        .launch-btn {
-            margin-top: 40px; padding: 15px 40px;
-            border: 1px solid var(--border); border-radius: 30px;
-            display: flex; align-items: center; gap: 10px;
-            font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text);
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .launch-btn:hover, .launch-btn:focus-visible { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
-        .launch-btn svg { width: 18px; height: 18px; }
+/* Burn ticker */
+.burn-ticker {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2);
+  border-radius:100px; padding:8px 16px; margin-top:20px;
+  font-size:13px; font-weight:600; color:var(--red);
+}
+.burn-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--red);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.5; transform:scale(.7); }
+}
 
-        /* ── SETTINGS MODAL ─────────────────────────────────── */
-        .modal {
-            position: fixed; inset: 0; background: #000; z-index: 200;
-            padding: 30px; padding-top: max(40px, env(safe-area-inset-top));
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            overflow-y: auto; display: flex; flex-direction: column;
-        }
-        .modal.open { transform: translateY(0); }
+/* Timeline */
+.timeline { margin-bottom:14px; }
+.timeline-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid var(--s2);
+}
+.timeline-item:last-child { border-bottom:none; }
+.tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.tl-name { font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-bar-wrap { flex:2; height:5px; background:var(--s2); border-radius:3px; overflow:hidden; }
+.tl-bar { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.16,1,.3,1); }
+.tl-date { font-size:11px; color:var(--dim2); font-weight:500; min-width:54px; text-align:right; }
 
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 40px;
-        }
+/* Empty state */
+.empty {
+  text-align:center; padding:60px 24px;
+}
+.empty-icon {
+  width:64px; height:64px; border-radius:50%;
+  background:var(--s1); border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center; margin:0 auto 20px;
+  color:var(--dim);
+}
+.empty-icon svg { width:28px; height:28px; }
+.empty-title { font-size:22px; font-weight:800; letter-spacing:-.5px; margin-bottom:8px; }
+.empty-sub { font-size:14px; color:var(--dim2); line-height:1.5; margin-bottom:28px; }
+.empty-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:15px 32px; border-radius:100px;
+  background:var(--p1); color:#fff; font-size:15px; font-weight:700;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 0 30px rgba(99,102,241,.4);
+}
+.empty-btn:hover { transform:scale(1.04); }
+.empty-btn:active { transform:scale(.97); }
+.empty-btn svg { width:18px; height:18px; }
 
-        .modal-close {
-            display: flex; align-items: center; justify-content: center;
-            width: 36px; height: 36px; border-radius: 50%; color: var(--text-dim);
-            transition: background 0.2s, color 0.2s;
-        }
-        .modal-close:hover, .modal-close:focus-visible { background: rgba(255,255,255,0.05); color: var(--text); }
-        .modal-close svg { width: 20px; height: 20px; }
+/* ─── DEBTS VIEW ───────────────────────────────────────────────────────────── */
+.debt-card {
+  background:var(--s0); border:1px solid var(--border);
+  border-radius:20px; padding:18px;
+  margin-bottom:12px; position:relative; overflow:hidden;
+  transition:border-color .2s;
+}
+.debt-card:hover { border-color:var(--border2); }
 
-        .form-group { margin-bottom: 30px; }
+.debt-card-stripe {
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+}
 
-        .form-group label {
-            display: block; font-size: 10px; font-weight: 600;
-            color: var(--text-dim); letter-spacing: 1.5px;
-            text-transform: uppercase; margin-bottom: 8px;
-        }
+.debt-card-header {
+  display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;
+}
+.debt-card-name { font-size:16px; font-weight:700; }
+.debt-card-rate {
+  font-size:11px; font-weight:700; padding:3px 9px; border-radius:100px;
+  background:var(--s2); color:var(--dim2);
+}
 
-        input.clean-input {
-            width: 100%; background: transparent; border: none;
-            border-bottom: 1px solid #333; color: #fff;
-            font-size: 24px; font-family: inherit;
-            padding: 10px 0; border-radius: 0; transition: border-color 0.2s;
-        }
-        input.clean-input:focus { outline: none; border-color: var(--accent); }
-        input.clean-input.field-error { border-color: var(--danger); }
-        input.clean-input:focus-visible { box-shadow: none; }
+.debt-card-body { display:flex; justify-content:space-between; margin-bottom:14px; }
+.debt-card-bal  { font-size:26px; font-weight:900; letter-spacing:-1px; }
+.debt-card-meta { text-align:right; }
+.debt-card-payoff-date { font-size:13px; font-weight:700; color:var(--p2); }
+.debt-card-payoff-label { font-size:10px; color:var(--dim); margin-top:2px; }
 
-        .modal-error {
-            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 10px; padding: 12px 16px; font-size: 12px; color: var(--danger);
-            margin-bottom: 20px; display: none;
-        }
-        .modal-error.visible { display: block; }
+.debt-card-footer {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.debt-card-min  { font-size:12px; color:var(--dim2); }
+.debt-card-actions { display:flex; gap:6px; }
+.debt-action-btn {
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--s2); color:var(--dim2);
+  transition:color .2s, background .2s;
+}
+.debt-action-btn:hover { background:var(--s1); color:var(--text); }
+.debt-action-btn.del:hover { background:rgba(239,68,68,.12); color:var(--red); }
+.debt-action-btn svg { width:13px; height:13px; }
 
-        .btn-action {
-            width: 100%; padding: 18px; background: var(--text); color: #000;
-            border-radius: 14px; font-weight: 700; font-size: 16px;
-            margin-top: auto; transition: opacity 0.2s;
-        }
-        .btn-action:hover, .btn-action:focus-visible { opacity: 0.9; }
+.debt-order-badge {
+  font-size:10px; font-weight:800; width:22px; height:22px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#000; flex-shrink:0;
+}
 
-        .wipe-btn {
-            width: 100%; text-align: center; margin-top: 20px;
-            padding: 10px; font-size: 12px; color: var(--danger); opacity: 0.7; transition: opacity 0.2s;
-        }
-        .wipe-btn:hover, .wipe-btn:focus-visible { opacity: 1; }
+/* ─── PLAN VIEW ────────────────────────────────────────────────────────────── */
+.strategy-toggle {
+  display:flex; background:var(--s1); border:1px solid var(--border);
+  border-radius:14px; padding:4px; gap:4px; margin-bottom:14px;
+}
+.strategy-opt {
+  flex:1; padding:11px 8px; border-radius:10px; text-align:center;
+  font-size:13px; font-weight:700; color:var(--dim2);
+  transition:color .2s, background .2s, box-shadow .2s;
+}
+.strategy-opt.active {
+  background:var(--s0); color:#fff;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);
+  border:1px solid var(--border2);
+}
+.strategy-opt-name { letter-spacing:.3px; }
+.strategy-opt-tag {
+  font-size:9px; font-weight:600; letter-spacing:.5px;
+  opacity:.6; margin-top:2px;
+}
 
-        /* ── TACTIC CARDS ───────────────────────────────────── */
-        .tactic-card {
-            padding: 15px !important; margin-bottom: 10px !important;
-            display: flex !important; gap: 15px; align-items: center;
-        }
-        .tactic-icon {
-            flex-shrink: 0; width: 36px; height: 36px;
-            background: rgba(99,102,241,0.15); color: var(--accent);
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-        }
-        .tactic-icon svg { width: 18px; height: 18px; }
-        .tactic-title { font-weight: 700; font-size: 13px; }
-        .tactic-desc  { font-size: 11px; color: #888; margin-top: 2px; }
-        .tactic-badge { margin: 0; margin-top: 5px; display: inline-block; }
-    </style>
+.strategy-explain {
+  font-size:12px; color:var(--dim2); line-height:1.6;
+  padding:12px 14px; background:var(--s1);
+  border-radius:12px; margin-bottom:14px; border:1px solid var(--border);
+}
+.strategy-explain strong { color:var(--text); }
+
+.extra-header {
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-bottom:10px;
+}
+.extra-label { font-size:11px; font-weight:700; color:var(--dim); letter-spacing:1px; text-transform:uppercase; }
+.extra-amount { font-size:24px; font-weight:800; }
+.extra-amount span { font-size:13px; color:var(--dim2); font-weight:500; }
+
+input[type=range] {
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:2px; background:var(--s2); border-radius:2px;
+  margin:8px 0 4px; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:24px; height:24px;
+  border-radius:50%; background:#fff;
+  box-shadow:0 0 12px rgba(255,255,255,.3);
+  transition:transform .1s;
+}
+input[type=range]::-webkit-slider-thumb:active { transform:scale(1.2); }
+input[type=range]:focus { outline:none; }
+
+.payoff-order { list-style:none; }
+.payoff-order li {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 0; border-bottom:1px solid var(--s2);
+  font-size:14px; font-weight:600;
+}
+.payoff-order li:last-child { border-bottom:none; }
+.po-num {
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:#000; flex-shrink:0;
+}
+.po-meta { flex:1; }
+.po-name { font-size:13px; font-weight:700; }
+.po-rate { font-size:11px; color:var(--dim2); }
+.po-date { font-size:13px; font-weight:700; color:var(--p2); }
+
+.compare-banner {
+  border-radius:16px; padding:16px;
+  border:1px solid rgba(16,185,129,.2);
+  background:rgba(16,185,129,.06);
+  margin-bottom:14px;
+}
+.compare-banner.warn {
+  border-color:rgba(245,158,11,.2);
+  background:rgba(245,158,11,.06);
+}
+.compare-title { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+.compare-banner.warn .compare-title { color:var(--gold); }
+.compare-body { font-size:14px; font-weight:600; }
+.compare-body span { font-size:13px; color:var(--dim2); font-weight:400; }
+
+/* ─── MODAL (Add / Edit Debt) ──────────────────────────────────────────────── */
+.modal-overlay {
+  position:fixed; inset:0; z-index:800;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(6px);
+  display:flex; align-items:flex-end;
+  opacity:0; pointer-events:none; transition:opacity .25s;
+}
+.modal-overlay.open { opacity:1; pointer-events:auto; }
+
+.modal-sheet {
+  width:100%; background:var(--s0);
+  border-top-left-radius:28px; border-top-right-radius:28px;
+  border-top:1px solid var(--border2);
+  padding:28px 20px;
+  padding-bottom:max(28px, env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.16,1,.3,1);
+}
+.modal-overlay.open .modal-sheet { transform:translateY(0); }
+
+.modal-handle {
+  width:36px; height:4px; background:var(--s2);
+  border-radius:2px; margin:0 auto 24px;
+}
+
+.modal-title { font-size:20px; font-weight:800; letter-spacing:-.5px; margin-bottom:24px; }
+
+.quick-types {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;
+}
+.qt-btn {
+  padding:6px 14px; border-radius:100px;
+  background:var(--s1); border:1px solid var(--border);
+  font-size:12px; font-weight:600; color:var(--dim2);
+  transition:color .2s, border-color .2s, background .2s;
+}
+.qt-btn:hover { color:var(--text); border-color:var(--border2); background:var(--s2); }
+
+.form-row { margin-bottom:22px; }
+.form-label {
+  display:block; font-size:10px; font-weight:700; color:var(--dim);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px;
+}
+.form-input {
+  width:100%; background:transparent; border:none;
+  border-bottom:1px solid var(--s2); color:#fff;
+  font-family:inherit; font-size:22px; font-weight:700;
+  padding:8px 0; transition:border-color .2s;
+}
+.form-input:focus { outline:none; border-color:var(--p1); }
+.form-input::placeholder { color:var(--s2); }
+.form-input.name-field { font-size:18px; }
+
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:22px; }
+
+.form-error {
+  font-size:12px; color:var(--red); margin-top:6px; display:none;
+}
+.form-error.show { display:block; }
+
+.modal-actions { display:flex; gap:10px; margin-top:8px; }
+
+.modal-save {
+  flex:1; padding:16px; border-radius:14px;
+  background:var(--p1); color:#fff;
+  font-size:15px; font-weight:700; letter-spacing:.3px;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 0 24px rgba(99,102,241,.3);
+}
+.modal-save:hover { transform:scale(1.02); box-shadow:0 0 36px rgba(99,102,241,.5); }
+.modal-save:active { transform:scale(.97); }
+
+.modal-cancel {
+  padding:16px 20px; border-radius:14px;
+  background:var(--s1); color:var(--dim2);
+  font-size:15px; font-weight:600;
+}
+.modal-cancel:hover { background:var(--s2); color:var(--text); }
+
+/* ─── COLORS ───────────────────────────────────────────────────────────────── */
+.c0 { background:#6366f1; } .c0t { color:#6366f1; } .c0b { border-color:#6366f1; }
+.c1 { background:#a855f7; } .c1t { color:#a855f7; } .c1b { border-color:#a855f7; }
+.c2 { background:#ec4899; } .c2t { color:#ec4899; } .c2b { border-color:#ec4899; }
+.c3 { background:#f59e0b; } .c3t { color:#f59e0b; } .c3b { border-color:#f59e0b; }
+.c4 { background:#10b981; } .c4t { color:#10b981; } .c4b { border-color:#10b981; }
+.c5 { background:#06b6d4; } .c5t { color:#06b6d4; } .c5b { border-color:#06b6d4; }
+.c6 { background:#f97316; } .c6t { color:#f97316; } .c6b { border-color:#f97316; }
+.c7 { background:#84cc16; } .c7t { color:#84cc16; } .c7b { border-color:#84cc16; }
+
+/* ─── UTILITY ──────────────────────────────────────────────────────────────── */
+.red  { color:var(--red)   !important; }
+.grn  { color:var(--green) !important; }
+.gld  { color:var(--gold)  !important; }
+.dim  { color:var(--dim2); }
+
+.hidden { display:none !important; }
+
+/* Smooth number transitions */
+[data-anim] { transition:opacity .2s; }
+[data-anim].flash { opacity:.3; }
+</style>
 </head>
 <body>
 
-<!-- ── SPLASH SCREEN ─────────────────────────────────────────────────────── -->
-<div class="secure-layer" id="splashScreen">
-    <svg style="width:64px;height:64px;color:var(--accent)" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <circle cx="12" cy="12" r="10"/>
-        <circle cx="12" cy="12" r="6"/>
-        <circle cx="12" cy="12" r="2"/>
+<!-- ══ SPLASH ══════════════════════════════════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-logo">
+    <svg viewBox="0 0 72 72" fill="none">
+      <circle cx="36" cy="36" r="34" stroke="url(#sg)" stroke-width="2"/>
+      <circle cx="36" cy="36" r="22" stroke="url(#sg)" stroke-width="2" opacity=".5"/>
+      <circle cx="36" cy="36" r="10" fill="url(#sg)"/>
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6366f1"/><stop offset=".5" stop-color="#a855f7"/>
+          <stop offset="1" stop-color="#ec4899"/>
+        </linearGradient>
+      </defs>
     </svg>
-    <div style="font-size:18px;font-weight:600;letter-spacing:2px;margin-top:20px">AURA ECLIPSE</div>
-    <div style="font-size:12px;color:var(--text-dim);margin-top:8px">Debt Payoff Calculator</div>
+  </div>
+  <div class="splash-wordmark">ZERO</div>
+  <div class="splash-sub">DEBT ELIMINATION ENGINE</div>
+  <button class="splash-btn" onclick="launch()">GET STARTED</button>
+</div>
 
-    <button class="launch-btn" id="launchBtn" onclick="launch()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" aria-hidden="true">
-            <polygon points="5 3 19 12 5 21 5 3"/>
+<!-- ══ APP SHELL ═══════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="wordmark">ZERO</div>
+    <div class="header-right">
+      <button class="icon-btn" onclick="openSettings()" aria-label="Settings" title="App Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        LAUNCH
-    </button>
-</div>
+      </button>
+      <button class="add-btn-header" onclick="openAdd()" id="hdrAddBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        ADD DEBT
+      </button>
+    </div>
+  </header>
 
-<!-- ── APP SHELL ─────────────────────────────────────────────────────────── -->
-<div class="app-shell">
+  <!-- Views -->
+  <div class="views">
 
-    <header>
-        <div>
-            <span class="brand">AURA</span>
-            <span class="secure-badge" aria-label="Vault secured">
-                <svg style="width:8px;height:8px;vertical-align:middle;margin-right:2px"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                VAULT
-            </span>
+    <!-- ══ MISSION ══════════════════════════════════════════════════════════ -->
+    <section id="v-mission" class="view active">
+
+      <!-- Empty state shown when no debts -->
+      <div id="mission-empty" class="empty hidden">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4m0 4h.01"/>
+          </svg>
         </div>
-        <button class="icon-btn" id="settingsBtn" onclick="openSettings()" aria-label="Open vault settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" aria-hidden="true">
-                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
-                <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
-                <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
-                <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
-                <line x1="17" y1="16" x2="23" y2="16"/>
-            </svg>
+        <div class="empty-title">No debts tracked yet</div>
+        <div class="empty-sub">Add your debts and we'll build<br>your personalized freedom plan.</div>
+        <button class="empty-btn" onclick="openAdd()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          ADD FIRST DEBT
         </button>
-    </header>
+      </div>
 
-    <div class="view-stack">
+      <!-- Content shown when debts exist -->
+      <div id="mission-data">
 
-        <!-- ── COCKPIT ─────────────────────────────────────── -->
-        <section id="view-cockpit" class="view active"
-                 role="region" aria-label="Cockpit – Debt Overview">
+        <!-- Freedom date hero -->
+        <div class="freedom-hero">
+          <div class="freedom-label">DEBT FREE DATE</div>
+          <div class="freedom-date" id="m-date">—</div>
+          <div class="freedom-sub" id="m-sub">calculating...</div>
+          <div class="burn-ticker" id="m-burn">
+            <div class="burn-dot"></div>
+            <span id="m-burn-val">$0.00/day in interest</span>
+          </div>
+        </div>
 
-            <!-- Ring: fills as payment improves (empty = at minimum, full = maximally optimized) -->
-            <div class="eclipse-wrapper" aria-hidden="true">
-                <svg class="eclipse-svg" viewBox="0 0 220 220">
-                    <defs>
-                        <linearGradient id="auraGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%"   stop-color="#6366f1"/>
-                            <stop offset="100%" stop-color="#a855f7"/>
-                        </linearGradient>
-                    </defs>
-                    <circle class="ring-track" cx="110" cy="110" r="100"/>
-                    <circle id="auraRing" class="ring-active" cx="110" cy="110" r="100"/>
-                </svg>
-                <div class="eclipse-content">
-                    <span class="label">DEBT FREE</span>
-                    <div class="hero-date" id="dispDate">--</div>
-                    <div class="hero-sub"  id="dispTimeLeft">--</div>
-                </div>
-            </div>
+        <!-- Stat grid -->
+        <div class="grid2">
+          <div class="stat-card">
+            <div class="label">TOTAL DEBT</div>
+            <div class="val" id="m-total-debt">$0</div>
+            <div class="sub" id="m-debt-count">0 accounts</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">TOTAL INTEREST</div>
+            <div class="val red" id="m-total-int">$0</div>
+            <div class="sub">at current payments</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="stat-card">
+            <div class="label">MONTHS LEFT</div>
+            <div class="val" id="m-months">0</div>
+            <div class="sub" id="m-months-sub">to debt freedom</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">MONTHLY COST</div>
+            <div class="val" id="m-monthly">$0</div>
+            <div class="sub">minimums + extra</div>
+          </div>
+        </div>
 
-            <!-- Optimization % indicator below ring -->
-            <div class="ring-opt-pct" id="dispOptPct" aria-hidden="true"></div>
+        <!-- Payoff timeline -->
+        <div class="sect">PAYOFF TIMELINE</div>
+        <div class="card">
+          <div class="timeline" id="m-timeline"></div>
+        </div>
 
-            <!-- Screen-reader announcement region -->
-            <div aria-live="polite" aria-atomic="true"
-                 id="srAnnounce"
-                 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">
-            </div>
+      </div>
+    </section>
 
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                    <label class="label" for="slider">MONTHLY PAYMENT</label>
-                    <span style="font-size:20px;font-weight:600;color:var(--accent)"
-                          id="dispPay">$0</span>
-                </div>
-                <div class="slider-wrap">
-                    <input type="range" id="slider"
-                           oninput="updateApp(parseFloat(this.value))"
-                           aria-label="Monthly payment amount in dollars">
-                </div>
-                <!-- This month's split: interest vs principal -->
-                <div id="monthlyBreakdown"
-                     style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px;padding-top:10px;border-top:1px solid #1a1a1a">
-                    <span><span style="color:var(--danger)">▼ <span id="dispMonthInt">$0</span></span>
-                          <span style="color:#555;margin-left:3px">interest</span></span>
-                    <span><span style="color:var(--success)">▲ <span id="dispMonthPrin">$0</span></span>
-                          <span style="color:#555;margin-left:3px">principal</span></span>
-                </div>
-            </div>
+    <!-- ══ DEBTS ════════════════════════════════════════════════════════════ -->
+    <section id="v-debts" class="view">
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
-                <div class="card" style="padding:15px;margin:0">
-                    <span class="label">INTEREST SAVED</span>
-                    <div style="font-size:18px;font-weight:600;color:var(--success)"
-                         id="dispSaved">$0</div>
-                    <div style="font-size:10px;color:#555;margin-top:4px">vs minimum payment</div>
-                </div>
-                <div class="card" style="padding:15px;margin:0">
-                    <span class="label">TIME RECLAIMED</span>
-                    <div style="font-size:18px;font-weight:600;color:#fff"
-                         id="dispTimeSaved">0 mo</div>
-                    <div style="font-size:10px;color:#555;margin-top:4px">vs minimum payment</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── INTEL ───────────────────────────────────────── -->
-        <section id="view-intel" class="view"
-                 role="region" aria-label="Intel – Capital Efficiency">
-
-            <span class="label" style="margin-bottom:16px">DEBT SUMMARY</span>
-
-            <div class="card" style="padding:16px 20px">
-                <div class="stat-row">
-                    <span class="stat-row-label">Principal</span>
-                    <span class="stat-row-value" id="repPrincipal">$0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-row-label">Total Interest (at current payment)</span>
-                    <span class="stat-row-value status-risk" id="repInterest">$0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-row-label">Total Cost of Debt</span>
-                    <span class="stat-row-value" id="repTotalCost">$0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-row-label">Interest Burn Ratio</span>
-                    <span class="stat-row-value" style="color:var(--gold)" id="repRatio">0%</span>
-                </div>
-            </div>
-
-            <span class="label" style="margin-top:8px;margin-bottom:16px">THIS MONTH'S PAYMENT</span>
-
-            <div class="card" style="padding:16px 20px">
-                <div class="stat-row">
-                    <span class="stat-row-label">Goes to Interest</span>
-                    <span class="stat-row-value status-risk" id="repMonthIntIntel">$0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-row-label">Goes to Principal</span>
-                    <span class="stat-row-value status-elite" id="repMonthPrinIntel">$0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-row-label">50% Paid Off By</span>
-                    <span class="stat-row-value" style="color:var(--accent)" id="repHalfway">--</span>
-                </div>
-            </div>
-
-            <span class="label" style="margin-top:8px;margin-bottom:16px">STRATEGIC OPPORTUNITIES</span>
-            <div id="tacticList" aria-live="polite" aria-label="Tactical payment opportunities"></div>
-        </section>
-
-        <!-- ── MASTERY ─────────────────────────────────────── -->
-        <section id="view-mastery" class="view"
-                 role="region" aria-label="Mastery – Credit Architecture">
-
-            <div style="text-align:center;margin-bottom:30px">
-                <h2 style="margin:0;font-size:20px">Credit Architect</h2>
-                <span style="font-size:11px;color:var(--text-dim)">OPTIMIZATION &amp; LEVERAGE</span>
-            </div>
-
-            <div class="util-sim">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span class="label" style="margin-bottom:0">UTILIZATION SIMULATOR</span>
-                    <span id="simScore" class="sim-badge status-elite" aria-live="polite">
-                        OPTIMIZED (ELITE)
-                    </span>
-                </div>
-
-                <!-- Configurable credit limit -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px">
-                    <span style="font-size:11px;color:#666">Credit Limit</span>
-                    <div style="display:flex;align-items:center;gap:4px">
-                        <span style="font-size:13px;color:#555">$</span>
-                        <input type="number" id="simLimit" class="limit-input"
-                               min="100" max="500000" step="100" value="10000"
-                               inputmode="numeric"
-                               aria-label="Total credit limit in dollars"
-                               oninput="onLimitChange()">
-                    </div>
-                </div>
-
-                <div style="font-size:11px;color:#666;margin-bottom:10px">
-                    Keep utilization under 30% for a healthy score.
-                </div>
-
-                <div class="progress-track"
-                     role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20"
-                     aria-label="Credit utilization percentage">
-                    <div class="progress-bar status-elite" id="simBar" style="width:20%"></div>
-                </div>
-                <input type="range" id="simSlider"
-                       min="0" max="10000" value="2000"
-                       oninput="runSim(parseFloat(this.value))"
-                       aria-label="Credit balance used"
-                       aria-valuemin="0" aria-valuemax="10000" aria-valuenow="2000">
-                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px">
-                    <span style="font-size:11px;color:#555" id="simPctLabel">20.0% utilized</span>
-                    <span style="font-size:14px;font-weight:700" id="simVal">$2,000 / $10,000</span>
-                </div>
-            </div>
-
-            <span class="label" style="margin-bottom:10px">ADVANCED PROTOCOLS</span>
-
-            <button class="mastery-card" onclick="alert('Module coming soon.')">
-                <div style="display:flex;gap:15px;align-items:flex-start">
-                    <svg style="width:18px;height:18px;color:var(--gold);margin-top:3px;flex-shrink:0"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" aria-hidden="true">
-                        <rect x="3" y="11" width="18" height="11" rx="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    <div>
-                        <div style="font-size:14px;font-weight:700;color:#fff">The 800-Club Blueprint</div>
-                        <div style="font-size:11px;color:#888;margin-top:4px">
-                            Step-by-step guide to reaching an 800+ credit score.
-                        </div>
-                    </div>
-                </div>
-            </button>
-
-            <button class="mastery-card" onclick="alert('Module coming soon.')">
-                <div style="display:flex;gap:15px;align-items:flex-start">
-                    <svg style="width:18px;height:18px;color:var(--text-dim);margin-top:3px;flex-shrink:0"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" aria-hidden="true">
-                        <polygon points="6 3 18 3 22 9 12 22 2 9"/>
-                        <line x1="2" y1="9" x2="22" y2="9"/>
-                        <line x1="12" y1="3" x2="12" y2="22"/>
-                    </svg>
-                    <div>
-                        <div style="font-size:14px;font-weight:700;color:#fff">0% Balance Transfer Guide</div>
-                        <div style="font-size:11px;color:#888;margin-top:4px">
-                            How to use 0% APR intro offers to reduce interest costs.
-                        </div>
-                    </div>
-                </div>
-            </button>
-
-        </section>
-
-    </div><!-- /view-stack -->
-
-    <nav class="nav-dock" aria-label="Main navigation">
-        <button class="nav-btn active" id="nav-cockpit"
-                onclick="nav('cockpit', this)"
-                aria-label="Cockpit view" aria-pressed="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-            </svg>
+      <div id="debts-empty" class="empty hidden">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <div class="empty-title">No debts added</div>
+        <div class="empty-sub">Track all your balances in one place<br>— credit cards, loans, anything.</div>
+        <button class="empty-btn" onclick="openAdd()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          ADD FIRST DEBT
         </button>
-        <button class="nav-btn" id="nav-intel"
-                onclick="nav('intel', this)"
-                aria-label="Intel view" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" aria-hidden="true">
-                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-            </svg>
-        </button>
-        <button class="nav-btn gold" id="nav-mastery"
-                onclick="nav('mastery', this)"
-                aria-label="Mastery view" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" aria-hidden="true">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-        </button>
-    </nav>
+      </div>
 
-</div><!-- /app-shell -->
+      <div id="debts-list"></div>
 
-<!-- ── SETTINGS MODAL ──────────────────────────────────────────────────────── -->
-<div class="modal" id="settingsModal"
-     role="dialog" aria-modal="true"
-     aria-labelledby="modalTitle" aria-hidden="true">
+    </section>
 
-    <div class="modal-header">
-        <span class="brand" id="modalTitle">VAULT CONFIG</span>
-        <button class="modal-close" id="modalCloseBtn"
-                onclick="closeSettings()" aria-label="Close settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+    <!-- ══ PLAN ═════════════════════════════════════════════════════════════ -->
+    <section id="v-plan" class="view">
+
+      <!-- Strategy comparison banner -->
+      <div id="plan-compare" class="compare-banner hidden"></div>
+
+      <!-- Strategy selector -->
+      <div class="sect">PAYOFF STRATEGY</div>
+      <div class="strategy-toggle">
+        <button class="strategy-opt active" id="opt-avalanche" onclick="setStrategy('avalanche')">
+          <div class="strategy-opt-name">⚡ AVALANCHE</div>
+          <div class="strategy-opt-tag">HIGHEST RATE FIRST</div>
         </button>
+        <button class="strategy-opt" id="opt-snowball" onclick="setStrategy('snowball')">
+          <div class="strategy-opt-name">🪨 SNOWBALL</div>
+          <div class="strategy-opt-tag">LOWEST BALANCE FIRST</div>
+        </button>
+      </div>
+      <div class="strategy-explain" id="plan-explain"></div>
+
+      <!-- Extra payment -->
+      <div class="sect">EXTRA MONTHLY PAYMENT</div>
+      <div class="card" style="padding-bottom:14px">
+        <div class="extra-header">
+          <span class="extra-label">EXTRA / MO</span>
+          <div class="extra-amount">
+            $<span id="p-extra-val">0</span>
+            <span id="p-extra-impact"></span>
+          </div>
+        </div>
+        <input type="range" id="p-extra-slider" min="0" max="1000" step="10" value="0"
+               oninput="setExtra(+this.value)" aria-label="Extra monthly payment">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:4px">
+          <span>$0</span><span id="p-slider-max">$1,000</span>
+        </div>
+      </div>
+
+      <!-- Payoff order -->
+      <div class="sect">PAYOFF ORDER</div>
+      <div class="card">
+        <ul class="payoff-order" id="p-order"></ul>
+      </div>
+
+      <!-- Plan empty state -->
+      <div id="plan-empty" class="empty hidden" style="padding:40px 24px">
+        <div class="empty-sub">Add debts to see your payoff strategy.</div>
+        <button class="empty-btn" onclick="openAdd()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          ADD DEBT
+        </button>
+      </div>
+
+    </section>
+
+  </div><!-- /views -->
+
+  <!-- Nav -->
+  <nav aria-label="Main navigation">
+    <div class="nav-pill">
+      <button class="nav-tab active" id="nav-mission" onclick="goTo('mission',this)" aria-label="Mission">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+        MISSION
+      </button>
+      <button class="nav-tab" id="nav-debts" onclick="goTo('debts',this)" aria-label="Debts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        DEBTS
+      </button>
+      <button class="nav-tab" id="nav-plan" onclick="goTo('plan',this)" aria-label="Plan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        PLAN
+      </button>
     </div>
+  </nav>
 
-    <div class="modal-error" id="modalError" role="alert" aria-live="assertive"></div>
+</div><!-- /app -->
 
-    <div class="form-group">
-        <label for="inBal">TOTAL DEBT BALANCE ($)</label>
-        <input type="number" id="inBal" class="clean-input"
-               inputmode="decimal" min="1" max="10000000" step="1"
-               placeholder="e.g. 15000">
+<!-- ══ SETTINGS MODAL ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Settings</div>
+    <div style="padding:8px 0">
+      <button onclick="wipeAll()" style="width:100%;text-align:left;padding:14px 0;font-size:14px;color:var(--red);border-bottom:1px solid var(--s2)">
+        🗑 Reset all data
+      </button>
+      <div style="padding:16px 0;font-size:12px;color:var(--dim2);line-height:1.7">
+        ZERO stores all data locally on your device.<br>
+        Nothing is sent to any server. Ever.
+      </div>
     </div>
-
-    <div class="form-group">
-        <label for="inRate">INTEREST RATE — APR (%)</label>
-        <input type="number" id="inRate" class="clean-input"
-               inputmode="decimal" min="0.01" max="100" step="0.01"
-               placeholder="e.g. 18.5">
-    </div>
-
-    <div class="form-group">
-        <label for="inMin">MINIMUM MONTHLY PAYMENT ($)</label>
-        <input type="number" id="inMin" class="clean-input"
-               inputmode="decimal" min="1" step="1"
-               placeholder="e.g. 250">
-    </div>
-
-    <button class="btn-action" onclick="saveVault()">ENCRYPT &amp; SAVE</button>
-    <button class="wipe-btn" onclick="wipeVault()">DESTROY VAULT DATA</button>
-
+    <button class="modal-cancel" style="width:100%;margin-top:8px" onclick="closeSettings()">CLOSE</button>
+  </div>
 </div>
 
+<!-- ══ ADD / EDIT DEBT MODAL ═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="debt-overlay" onclick="closeDebtModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Add Debt</div>
+
+    <!-- Quick-type chips -->
+    <div class="quick-types" id="quick-types">
+      <button class="qt-btn" onclick="quickType('Credit Card')">Credit Card</button>
+      <button class="qt-btn" onclick="quickType('Student Loan')">Student Loan</button>
+      <button class="qt-btn" onclick="quickType('Car Loan')">Car Loan</button>
+      <button class="qt-btn" onclick="quickType('Personal Loan')">Personal Loan</button>
+      <button class="qt-btn" onclick="quickType('Medical Bill')">Medical</button>
+      <button class="qt-btn" onclick="quickType('Mortgage')">Mortgage</button>
+    </div>
+
+    <!-- Name -->
+    <div class="form-row">
+      <label class="form-label" for="f-name">DEBT NAME</label>
+      <input class="form-input name-field" id="f-name" type="text"
+             placeholder="e.g. Chase Freedom Visa" autocomplete="off">
+    </div>
+
+    <div class="form-row-2">
+      <!-- Balance -->
+      <div>
+        <label class="form-label" for="f-bal">BALANCE ($)</label>
+        <input class="form-input" id="f-bal" type="number"
+               inputmode="decimal" placeholder="5000" min="1" max="10000000">
+      </div>
+      <!-- APR -->
+      <div>
+        <label class="form-label" for="f-rate">APR (%)</label>
+        <input class="form-input" id="f-rate" type="number"
+               inputmode="decimal" placeholder="19.99" min="0" max="100" step="0.01">
+      </div>
+    </div>
+
+    <!-- Min payment -->
+    <div class="form-row">
+      <label class="form-label" for="f-min">MINIMUM PAYMENT ($/mo)</label>
+      <input class="form-input" id="f-min" type="number"
+             inputmode="decimal" placeholder="125" min="1">
+      <div class="form-error" id="f-error"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDebtModal()">CANCEL</button>
+      <button class="modal-save" onclick="saveDebt()">SAVE DEBT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCRIPT ══════════════════════════════════════════════════════════════════ -->
 <script>
-// ─── CONSTANTS ──────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'aura_eclipse_v1';
-const RING_RADIUS = 100;
-const RING_CIRC   = 2 * Math.PI * RING_RADIUS; // 628.3185307...
-const MAX_MONTHS  = 600;
-const DEFAULTS    = Object.freeze({ bal: 15000, rate: 18.5, min: 250 });
 
-// Inline SVG strings for tactic icons — no CDN dependency
-const TACTIC_ICONS = {
-    coffee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
-    rocket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
-    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-    bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+// ─── CONSTANTS ─────────────────────────────────────────────────────────────
+const KEY      = 'zero_v2';
+const COLORS   = ['c0','c1','c2','c3','c4','c5','c6','c7'];
+const COLORHEX = ['#6366f1','#a855f7','#ec4899','#f59e0b','#10b981','#06b6d4','#f97316','#84cc16'];
+const MAX_MONTHS = 600;
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let S = {
+  debts: [],         // { id, name, balance, rate, minPayment, colorIdx }
+  strategy: 'avalanche',
+  extra: 0,
 };
+let editingId = null;
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
-let state    = { ...DEFAULTS };
-let baseline = { valid: false, m: 0, int: 0 };
-
-// ─── STORAGE ─────────────────────────────────────────────────────────────────
-function loadState() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
-
-    try {
-        const p    = JSON.parse(raw);
-        const bal  = Number(p.bal);
-        const rate = Number(p.rate);
-        const min  = Number(p.min);
-
-        if (
-            Number.isFinite(bal)  && bal  > 0 && bal  <= 10_000_000 &&
-            Number.isFinite(rate) && rate > 0 && rate <= 100 &&
-            Number.isFinite(min)  && min  > 0
-        ) {
-            return { bal, rate, min };
-        }
-    } catch (_) { /* fall through */ }
-
-    console.warn('Vault data invalid — resetting to defaults');
-    localStorage.removeItem(STORAGE_KEY);
-    return { ...DEFAULTS };
+// ─── PERSISTENCE ───────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(S));
 }
 
-// ─── FINANCIAL ENGINE ────────────────────────────────────────────────────────
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (Array.isArray(p.debts)) {
+      S.debts = p.debts.filter(d =>
+        d.id && d.name &&
+        +d.balance > 0 && +d.rate >= 0 && +d.minPayment > 0
+      ).map(d => ({
+        id: d.id,
+        name: d.name,
+        balance: +d.balance,
+        rate: +d.rate,
+        minPayment: +d.minPayment,
+        colorIdx: d.colorIdx ?? 0,
+      }));
+    }
+    if (p.strategy === 'snowball') S.strategy = 'snowball';
+    if (typeof p.extra === 'number' && p.extra >= 0) S.extra = p.extra;
+  } catch(_) {}
+}
+
+// ─── FINANCIAL ENGINE ──────────────────────────────────────────────────────
 /**
- * Calculate complete payoff schedule.
- * Works in whole CENTS to eliminate floating-point drift over hundreds of iterations.
+ * Month-by-month debt payoff simulation.
  *
- * @param {number} b  Balance in dollars
- * @param {number} r  Annual interest rate as a percentage (e.g. 18.5)
- * @param {number} p  Monthly payment in dollars
- * @returns {{ valid: boolean, m: number, int: number }}
- */
-function calc(b, r, p) {
-    const monthlyRate       = r / 100 / 12;
-    let   balCents          = Math.round(b * 100);
-    const payCents          = Math.round(p * 100);
-    const firstInterestCents = Math.round(balCents * monthlyRate);
-
-    if (payCents <= firstInterestCents) {
-        return { valid: false, m: 0, int: 0 };
-    }
-
-    let months             = 0;
-    let totalInterestCents = 0;
-
-    while (balCents > 0 && months < MAX_MONTHS) {
-        const interestCents  = Math.round(balCents * monthlyRate);
-        const principalCents = Math.min(payCents - interestCents, balCents);
-        balCents            -= principalCents;
-        totalInterestCents  += interestCents;
-        months++;
-    }
-
-    return { valid: true, m: months, int: totalInterestCents / 100 };
-}
-
-/**
- * Find the number of months until balance drops to targetFraction of original.
- * Used for milestone calculations (e.g. 50% paid off).
+ * Algorithm:
+ *   Each month —
+ *   1. Accrue interest on every active debt.
+ *   2. Apply each debt's minimum payment (if balance < minimum, pay balance).
+ *      Any surplus (minimum - amount needed) joins the extra pool this month.
+ *   3. Apply the extra pool to priority targets in strategy order.
+ *      When a target is paid off, its minimum rolls forward to the next target
+ *      this month AND permanently increases the rolling extra for future months.
  *
- * @param {number} b              Starting balance in dollars
- * @param {number} r              Annual interest rate as a percentage
- * @param {number} p              Monthly payment in dollars
- * @param {number} targetFraction e.g. 0.5 for the 50% remaining milestone
- * @returns {number}              Months until balance ≤ targetFraction * b, or -1 if unreachable
+ * @param {object[]} debts
+ * @param {number}   extraMonthly   Extra monthly amount on top of all minimums
+ * @param {'avalanche'|'snowball'} strategy
+ * @returns {{ totalMonths, payoffMonths, totalInterest, perDebt } | null}
  */
-function monthsToFraction(b, r, p, targetFraction) {
-    const monthlyRate  = r / 100 / 12;
-    let   balCents     = Math.round(b * 100);
-    const payCents     = Math.round(p * 100);
-    const targetCents  = Math.round(b * targetFraction * 100);
+function simulate(debts, extraMonthly, strategy) {
+  if (!debts.length) return null;
 
-    let months = 0;
-    while (balCents > targetCents && months < MAX_MONTHS) {
-        const interestCents  = Math.round(balCents * monthlyRate);
-        const principalCents = Math.min(payCents - interestCents, balCents);
-        if (principalCents <= 0) return -1; // payment can't make progress
-        balCents -= principalCents;
-        months++;
-    }
-    return months;
-}
+  // Work in dollars with cent-level precision
+  const work = debts.map(d => ({
+    id: d.id,
+    name: d.name,
+    rate: d.rate,
+    minPayment: d.minPayment,
+    remaining: d.balance,
+    paidOffMonth: null,
+    totalInterest: 0,
+  }));
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-function init() {
-    state = loadState();
+  const monthlyRate = d => d.rate / 100 / 12;
 
-    document.getElementById('inBal').value  = state.bal;
-    document.getElementById('inRate').value = state.rate;
-    document.getElementById('inMin').value  = state.min;
+  // Validate: minimum must exceed first-month interest for each debt
+  // (If not, the user entered bad data — we mark that debt as invalid
+  //  and skip it rather than infinite-looping.)
+  const validWork = work.filter(w => {
+    const firstInterest = w.remaining * monthlyRate(w);
+    return w.minPayment > firstInterest;
+  });
+  if (!validWork.length) return null;
 
-    baseline = calc(state.bal, state.rate, state.min);
+  let rollingExtra = extraMonthly;
+  let month = 0;
 
-    if (!baseline.valid) {
-        const minViable = Math.ceil(state.bal * (state.rate / 100 / 12)) + 1;
-        showModalError(
-            'Your minimum payment of $' + state.min.toLocaleString() +
-            ' does not cover monthly interest. ' +
-            'A minimum of $' + minViable.toLocaleString() + '/mo is required.'
-        );
-        baseline = calc(state.bal, state.rate, minViable);
-    }
+  while (validWork.some(w => w.remaining > 0.005) && month < MAX_MONTHS) {
+    month++;
 
-    setupSlider();
-    // Render at the slider's current position (minimum payment on first load)
-    updateApp(parseFloat(document.getElementById('slider').value));
-    // Restore credit limit from storage and render the sim
-    const savedLimit = parseInt(localStorage.getItem('aura_credit_limit') || '10000', 10);
-    document.getElementById('simLimit').value  = savedLimit;
-    document.getElementById('simSlider').max   = savedLimit;
-    document.getElementById('simSlider').value = Math.min(2000, savedLimit * 0.2);
-    runSim(parseFloat(document.getElementById('simSlider').value));
-}
-
-function launch() {
-    // Detect first-time user before init() creates the storage key
-    const isFirstTime = !localStorage.getItem(STORAGE_KEY);
-    init();
-    document.getElementById('splashScreen').classList.add('hidden');
-    if (isFirstTime) {
-        // Guide new users straight to their settings
-        setTimeout(() => openSettings(), 450);
-    } else {
-        document.getElementById('settingsBtn').focus();
-    }
-}
-
-// ─── VAULT MANAGEMENT ────────────────────────────────────────────────────────
-function saveVault() {
-    const balRaw  = parseFloat(document.getElementById('inBal').value);
-    const rateRaw = parseFloat(document.getElementById('inRate').value);
-    const minRaw  = parseFloat(document.getElementById('inMin').value);
-
-    const fields = [
-        {
-            id: 'inBal',
-            ok: Number.isFinite(balRaw) && balRaw > 0 && balRaw <= 10_000_000,
-            msg: 'Balance must be between $1 and $10,000,000.',
-        },
-        {
-            id: 'inRate',
-            ok: Number.isFinite(rateRaw) && rateRaw > 0 && rateRaw <= 100,
-            msg: 'Interest rate must be between 0.01% and 100%.',
-        },
-        {
-            id: 'inMin',
-            ok: Number.isFinite(minRaw) && minRaw > 0,
-            msg: 'Minimum payment must be greater than $0.',
-        },
-    ];
-
-    let firstError = null;
-    fields.forEach(({ id, ok, msg }) => {
-        document.getElementById(id).classList.toggle('field-error', !ok);
-        if (!ok && !firstError) firstError = msg;
-    });
-
-    if (firstError) { showModalError(firstError); return; }
-
-    clearModalError();
-    state = { bal: balRaw, rate: rateRaw, min: minRaw };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    init();
-    closeSettings();
-}
-
-function wipeVault() {
-    if (confirm('Permanently delete all vault data?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem('aura_credit_limit');
-        location.reload();
-    }
-}
-
-// ─── UI RENDERER ─────────────────────────────────────────────────────────────
-function updateApp(pay) {
-    const res = calc(state.bal, state.rate, pay);
-    if (!res.valid) return;
-
-    // ── Time display ─────────────────────────────────────────────────────────
-    // Show months when less than 24 months; years otherwise — more precise and
-    // more motivating when the number is small.
-    const targetDate = new Date();
-    targetDate.setMonth(targetDate.getMonth() + res.m);
-    const dateStr = targetDate
-        .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-        .toUpperCase();
-
-    let timeLeftStr;
-    if (res.m < 24) {
-        timeLeftStr = res.m + ' month' + (res.m === 1 ? '' : 's') + ' away';
-    } else {
-        timeLeftStr = (res.m / 12).toFixed(1) + ' years away';
+    // Phase 1 — Accrue interest
+    for (const w of validWork) {
+      if (w.remaining <= 0.005) continue;
+      const interest = w.remaining * monthlyRate(w);
+      w.remaining   += interest;
+      w.totalInterest += interest;
     }
 
-    // ── Savings vs baseline ───────────────────────────────────────────────────
-    const interestSaved = Math.max(0, baseline.int - res.int);
-    const monthsSaved   = Math.max(0, baseline.m - res.m);
-    let   timeSavedStr;
-    if (monthsSaved === 0) {
-        timeSavedStr = '0 mo';
-    } else if (monthsSaved < 24) {
-        timeSavedStr = monthsSaved + ' mo';
-    } else {
-        timeSavedStr = (monthsSaved / 12).toFixed(1) + ' yrs';
+    // Phase 2 — Apply minimums; collect this-month surplus
+    const active = validWork.filter(w => w.remaining > 0.005);
+    let monthPool = 0;
+    const paidByMin = [];
+
+    for (const w of active) {
+      const pay     = Math.min(w.minPayment, w.remaining);
+      const surplus = w.minPayment - pay;
+      w.remaining  -= pay;
+      monthPool    += surplus;
+      if (w.remaining < 0.005) {
+        w.remaining = 0;
+        if (w.paidOffMonth === null) { w.paidOffMonth = month; paidByMin.push(w); }
+      }
     }
 
-    // ── Monthly breakdown (first month) ──────────────────────────────────────
-    const monthInt  = state.bal * (state.rate / 100 / 12);
-    const monthPrin = Math.max(0, pay - monthInt);
+    // Phase 3 — Apply extra pool to priority targets
+    let pool = rollingExtra + monthPool;
+    const targets = validWork.filter(w => w.remaining > 0.005);
+    if (strategy === 'avalanche') targets.sort((a,b) => b.rate - a.rate);
+    else                          targets.sort((a,b) => a.remaining - b.remaining);
 
-    // ── Ring: fills as payment IMPROVES ──────────────────────────────────────
-    // ratio = 1 at minimum payment (ring empty — lots to improve)
-    // ratio → 0 at max payment (ring full — maximally optimized)
-    // offset = RING_CIRC * ratio: high offset = empty, low offset = full
-    const ratio     = baseline.m > 0 ? Math.min(res.m / baseline.m, 1) : 1;
-    const offset    = RING_CIRC * ratio;
-    const optPct    = Math.round((1 - ratio) * 100);
-
-    // ── Write to DOM ─────────────────────────────────────────────────────────
-    document.getElementById('dispDate').textContent      = dateStr;
-    document.getElementById('dispTimeLeft').textContent  = timeLeftStr;
-    document.getElementById('dispPay').textContent       = '$' + Math.round(pay).toLocaleString();
-    document.getElementById('dispSaved').textContent     = '$' + Math.round(interestSaved).toLocaleString();
-    document.getElementById('dispTimeSaved').textContent = timeSavedStr;
-    document.getElementById('dispMonthInt').textContent  = '$' + Math.round(monthInt).toLocaleString();
-    document.getElementById('dispMonthPrin').textContent = '$' + Math.round(monthPrin).toLocaleString();
-    document.getElementById('dispOptPct').textContent    =
-        optPct > 0 ? optPct + '% optimized above minimum' : 'at minimum payment';
-
-    document.getElementById('auraRing').style.strokeDashoffset = offset;
-
-    // Slider ARIA
-    document.getElementById('slider').setAttribute('aria-valuenow', Math.round(pay));
-
-    // Screen-reader summary
-    document.getElementById('srAnnounce').textContent =
-        'At $' + Math.round(pay).toLocaleString() + ' per month, debt-free ' + dateStr +
-        '. Interest saved: $' + Math.round(interestSaved).toLocaleString() +
-        '. Time saved: ' + timeSavedStr + '.';
-
-    // ── Intel panel ───────────────────────────────────────────────────────────
-    const totalCost = state.bal + res.int;
-    const burnRatio = res.int / totalCost * 100;
-    const halfway   = monthsToFraction(state.bal, state.rate, pay, 0.5);
-    let   halfwayStr;
-    if (halfway < 0) {
-        halfwayStr = 'N/A';
-    } else {
-        const hw = new Date();
-        hw.setMonth(hw.getMonth() + halfway);
-        halfwayStr = hw.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
-    }
-
-    document.getElementById('repPrincipal').textContent     = '$' + Math.round(state.bal).toLocaleString();
-    document.getElementById('repInterest').textContent      = '$' + Math.round(res.int).toLocaleString();
-    document.getElementById('repTotalCost').textContent     = '$' + Math.round(totalCost).toLocaleString();
-    document.getElementById('repRatio').textContent         = burnRatio.toFixed(1) + '%';
-    document.getElementById('repMonthIntIntel').textContent = '$' + Math.round(monthInt).toLocaleString();
-    document.getElementById('repMonthPrinIntel').textContent = '$' + Math.round(monthPrin).toLocaleString();
-    document.getElementById('repHalfway').textContent       = halfwayStr;
-
-    renderTactics(res, pay);
-}
-
-// ─── TACTIC CARDS ────────────────────────────────────────────────────────────
-function renderTactics(res, pay) {
-    const list = document.getElementById('tacticList');
-    while (list.firstChild) list.removeChild(list.firstChild);
-
-    // 1. Coffee Swap: +$50/mo
-    const sim50 = calc(state.bal, state.rate, pay + 50);
-    if (sim50.valid && sim50.m < res.m) {
-        list.appendChild(createTacticEl(
-            'The Coffee Swap', '+$50/mo extra',
-            'SAVE $' + Math.round(res.int - sim50.int).toLocaleString(),
-            'coffee'
-        ));
-    }
-
-    // 2. Velocity Protocol: +$200/mo
-    const sim200 = calc(state.bal, state.rate, pay + 200);
-    if (sim200.valid && sim200.m < res.m) {
-        list.appendChild(createTacticEl(
-            'Velocity Protocol', '+$200/mo extra',
-            '−' + (res.m - sim200.m) + ' months',
-            'rocket'
-        ));
-    }
-
-    // 3. Bi-weekly trick: pay half monthly every 2 weeks
-    //    → 26 half-payments/year = 13 full payments instead of 12
-    //    → equivalent monthly rate: pay * 13/12
-    const biWeeklyEffective = pay * 13 / 12;
-    const simBW = calc(state.bal, state.rate, biWeeklyEffective);
-    if (simBW.valid && simBW.m < res.m) {
-        list.appendChild(createTacticEl(
-            'Bi-Weekly Switch', 'Pay half your amount every 2 weeks',
-            '−' + (res.m - simBW.m) + ' months · free trick',
-            'calendar'
-        ));
-    }
-
-    // 4. Lump sum: $500 extra applied today
-    if (state.bal > 500) {
-        const simLump = calc(state.bal - 500, state.rate, pay);
-        if (simLump.valid && simLump.m < res.m) {
-            list.appendChild(createTacticEl(
-                '$500 Lump Sum', 'Apply $500 extra to principal today',
-                'SAVE $' + Math.round(res.int - simLump.int).toLocaleString() +
-                ' · −' + (res.m - simLump.m) + ' mo',
-                'bolt'
-            ));
+    const paidByPool = [];
+    for (const w of targets) {
+      if (pool < 0.005) break;
+      const pay = Math.min(pool, w.remaining);
+      w.remaining -= pay;
+      pool        -= pay;
+      if (w.remaining < 0.005) {
+        w.remaining = 0;
+        if (w.paidOffMonth === null) {
+          w.paidOffMonth = month;
+          paidByPool.push(w);
+          pool += w.minPayment; // freed min cascades to next target THIS month
         }
+      }
     }
 
-    // 5. Pay it off in 12 months — show required payment and savings
-    if (res.m > 12) {
-        // Binary-search for the payment that pays off in exactly 12 months
-        const payIn12 = findPaymentForMonths(state.bal, state.rate, 12);
-        if (payIn12 !== null && payIn12 > pay) {
-            const sim12 = calc(state.bal, state.rate, payIn12);
-            list.appendChild(createTacticEl(
-                'Debt-Free in 1 Year', '$' + Math.round(payIn12).toLocaleString() + '/mo required',
-                'SAVE $' + Math.round(res.int - sim12.int).toLocaleString(),
-                'clock'
-            ));
-        }
+    // Phase 4 — Permanently increase rolling extra for future months
+    for (const w of [...paidByMin, ...paidByPool]) {
+      rollingExtra += w.minPayment;
     }
+  }
 
-    if (!list.firstChild) {
-        const empty = document.createElement('p');
-        empty.style.cssText = 'font-size:12px;color:var(--text-dim);text-align:center;padding:20px;';
-        empty.textContent   = 'No additional opportunities at this payment level.';
-        list.appendChild(empty);
+  const totalMonths  = month;
+  const payoffMonths = {};
+  let   totalInterest = 0;
+  for (const w of validWork) {
+    payoffMonths[w.id] = w.paidOffMonth ?? totalMonths;
+    totalInterest     += w.totalInterest;
+  }
+  // Also include debts that failed validation (unpayable) as never paid off
+  for (const w of work) {
+    if (!(w.id in payoffMonths)) payoffMonths[w.id] = MAX_MONTHS;
+  }
+
+  return { totalMonths, payoffMonths, totalInterest, perDebt: validWork };
+}
+
+// ─── RENDER COORDINATOR ────────────────────────────────────────────────────
+function render() {
+  const sim    = simulate(S.debts, S.extra, S.strategy);
+  const simAlt = simulate(S.debts, S.extra,
+    S.strategy === 'avalanche' ? 'snowball' : 'avalanche');
+
+  renderMission(sim);
+  renderDebts(sim);
+  renderPlan(sim, simAlt);
+}
+
+// ─── MISSION ───────────────────────────────────────────────────────────────
+function renderMission(sim) {
+  const empty   = document.getElementById('mission-empty');
+  const data    = document.getElementById('mission-data');
+  const hasData = S.debts.length > 0 && sim;
+
+  empty.classList.toggle('hidden', hasData);
+  data.classList.toggle('hidden', !hasData);
+  if (!hasData) return;
+
+  // Freedom date
+  const fd = new Date();
+  fd.setMonth(fd.getMonth() + sim.totalMonths);
+  const dateStr = fd.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+
+  const m = sim.totalMonths;
+  const subStr = m < 24
+    ? `${m} months until you're debt free`
+    : `${(m/12).toFixed(1)} years until you're debt free`;
+
+  set('m-date', dateStr);
+  set('m-sub',  subStr);
+
+  // Daily interest burn (based on current balances)
+  const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
+  set('m-burn-val', `$${fmt(dailyBurn, 2)}/day in interest`);
+
+  // Stats
+  const totalDebt    = S.debts.reduce((s,d) => s + d.balance, 0);
+  const totalMin     = S.debts.reduce((s,d) => s + d.minPayment, 0);
+  set('m-total-debt',  '$' + fmtK(totalDebt));
+  set('m-total-int',   '$' + fmtK(sim.totalInterest));
+  set('m-months',      m.toString());
+  set('m-debt-count',  S.debts.length + ' account' + (S.debts.length !== 1 ? 's' : ''));
+  set('m-monthly',     '$' + fmtK(totalMin + S.extra));
+
+  // Timeline
+  const tl = document.getElementById('m-timeline');
+  tl.innerHTML = '';
+
+  // Sort by payoff month for visual clarity
+  const sorted = [...S.debts].sort(
+    (a,b) => (sim.payoffMonths[a.id] ?? MAX_MONTHS) - (sim.payoffMonths[b.id] ?? MAX_MONTHS)
+  );
+
+  sorted.forEach(d => {
+    const payMonth = sim.payoffMonths[d.id] ?? sim.totalMonths;
+    const pct      = sim.totalMonths > 0 ? Math.min((payMonth / sim.totalMonths) * 100, 100) : 100;
+    const payDate  = new Date();
+    payDate.setMonth(payDate.getMonth() + payMonth);
+    const payStr   = payDate.toLocaleDateString('en-US', { month:'short', year:'2-digit' });
+    const hex      = COLORHEX[d.colorIdx % COLORHEX.length];
+
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    item.innerHTML = `
+      <div class="tl-dot" style="background:${hex}"></div>
+      <div class="tl-name">${esc(d.name)}</div>
+      <div class="tl-bar-wrap">
+        <div class="tl-bar" style="width:${pct}%;background:${hex}"></div>
+      </div>
+      <div class="tl-date">${payStr}</div>
+    `;
+    tl.appendChild(item);
+  });
+}
+
+// ─── DEBTS ─────────────────────────────────────────────────────────────────
+function renderDebts(sim) {
+  const empty = document.getElementById('debts-empty');
+  const list  = document.getElementById('debts-list');
+
+  if (!S.debts.length) {
+    empty.classList.remove('hidden');
+    list.innerHTML = '';
+    return;
+  }
+  empty.classList.add('hidden');
+
+  // Determine payoff order for badge
+  const order = getPayoffOrder();
+
+  list.innerHTML = '';
+  S.debts.forEach(d => {
+    const hex      = COLORHEX[d.colorIdx % COLORHEX.length];
+    const payMonth = sim?.payoffMonths[d.id] ?? null;
+    let payStr = '—';
+    if (payMonth) {
+      const pd = new Date();
+      pd.setMonth(pd.getMonth() + payMonth);
+      payStr = pd.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     }
+    const pos = order.findIndex(id => id === d.id) + 1;
+
+    const card = document.createElement('div');
+    card.className = 'debt-card';
+    card.innerHTML = `
+      <div class="debt-card-stripe" style="background:${hex}"></div>
+      <div class="debt-card-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="debt-order-badge c${d.colorIdx % COLORHEX.length}" style="font-size:10px">#${pos}</div>
+          <div class="debt-card-name">${esc(d.name)}</div>
+        </div>
+        <div class="debt-card-rate">${d.rate}% APR</div>
+      </div>
+      <div class="debt-card-body">
+        <div class="debt-card-bal">$${fmtK(d.balance)}</div>
+        <div class="debt-card-meta">
+          <div class="debt-card-payoff-date">${payStr}</div>
+          <div class="debt-card-payoff-label">debt free</div>
+        </div>
+      </div>
+      <div class="debt-card-footer">
+        <div class="debt-card-min">Min $${fmtK(d.minPayment)}/mo</div>
+        <div class="debt-card-actions">
+          <button class="debt-action-btn" onclick="openEdit('${d.id}')" aria-label="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="debt-action-btn del" onclick="deleteDebt('${d.id}')" aria-label="Delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6m4-6v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
 }
 
-/**
- * Binary-search for the monthly payment that pays off a debt in exactly targetMonths.
- * Returns null if no reasonable payment exists (e.g. would require > 100% of balance/mo).
- *
- * @param {number} b            Balance in dollars
- * @param {number} r            Annual interest rate as a percentage
- * @param {number} targetMonths e.g. 12
- * @returns {number|null}
- */
-function findPaymentForMonths(b, r, targetMonths) {
-    let lo = b * (r / 100 / 12) + 1; // just above monthly interest
-    let hi = b;                        // paying entire balance at once
+// ─── PLAN ──────────────────────────────────────────────────────────────────
+function renderPlan(sim, simAlt) {
+  const planEmpty = document.getElementById('plan-empty');
+  const hasDebts  = S.debts.length > 0;
 
-    for (let i = 0; i < 40; i++) {    // 40 iterations → accurate to < $0.01
-        const mid = (lo + hi) / 2;
-        const res = calc(b, r, mid);
-        if (!res.valid) { lo = mid; continue; }
-        if (res.m <= targetMonths) { hi = mid; } else { lo = mid; }
+  planEmpty.classList.toggle('hidden', hasDebts);
+  document.getElementById('plan-compare').classList.toggle('hidden', !hasDebts || !sim);
+  document.querySelector('.sect').style.display = ''; // always show
+
+  // Strategy toggle state
+  document.getElementById('opt-avalanche').classList.toggle('active', S.strategy === 'avalanche');
+  document.getElementById('opt-snowball').classList.toggle('active', S.strategy === 'snowball');
+
+  // Strategy explanation
+  const explains = {
+    avalanche: '<strong>Avalanche:</strong> Pay minimums on all debts, then throw everything at the <strong>highest-interest debt first</strong>. Mathematically optimal — saves the most money.',
+    snowball:  '<strong>Snowball:</strong> Pay minimums on all debts, then attack the <strong>smallest balance first</strong>. Builds momentum with quick wins. Proven to keep people motivated.',
+  };
+  document.getElementById('plan-explain').innerHTML = explains[S.strategy];
+
+  // Extra slider
+  if (hasDebts) {
+    const maxExtra = Math.ceil(S.debts.reduce((s,d) => s + d.balance, 0) / 12 / 10) * 10;
+    const slider   = document.getElementById('p-extra-slider');
+    slider.max     = maxExtra;
+    set('p-slider-max', '$' + fmtK(maxExtra));
+    slider.value   = Math.min(S.extra, maxExtra);
+  }
+
+  set('p-extra-val', S.extra.toLocaleString());
+
+  // Impact text on extra payment
+  if (sim && simAlt && S.extra > 0) {
+    const simBase = simulate(S.debts, 0, S.strategy);
+    if (simBase) {
+      const saved  = simBase.totalInterest - sim.totalInterest;
+      const months = simBase.totalMonths - sim.totalMonths;
+      set('p-extra-impact',
+        saved > 0
+          ? ` · saves $${fmtK(saved)} · −${months} mo`
+          : '');
     }
+  } else {
+    set('p-extra-impact', '');
+  }
 
-    const result = calc(b, r, hi);
-    if (!result.valid || result.m > targetMonths) return null;
-    return Math.ceil(hi); // round up so payoff is guaranteed within target
-}
+  if (!hasDebts || !sim) {
+    document.getElementById('p-order').innerHTML = '';
+    return;
+  }
 
-function createTacticEl(title, desc, badge, iconKey) {
-    const card         = document.createElement('div');
-    card.className     = 'card tactic-card';
-
-    const iconWrap     = document.createElement('div');
-    iconWrap.className = 'tactic-icon';
-    iconWrap.innerHTML = TACTIC_ICONS[iconKey] || '';
-
-    const content      = document.createElement('div');
-    const titleEl      = document.createElement('div');
-    titleEl.className  = 'tactic-title';
-    titleEl.textContent = title;
-
-    const descEl       = document.createElement('div');
-    descEl.className   = 'tactic-desc';
-    descEl.textContent = desc;
-
-    const badgeEl      = document.createElement('span');
-    badgeEl.className  = 'secure-badge tactic-badge';
-    badgeEl.textContent = badge;
-
-    content.appendChild(titleEl);
-    content.appendChild(descEl);
-    content.appendChild(badgeEl);
-    card.appendChild(iconWrap);
-    card.appendChild(content);
-    return card;
-}
-
-// ─── UTILIZATION SIMULATOR ───────────────────────────────────────────────────
-function onLimitChange() {
-    const limit = Math.max(100, parseFloat(document.getElementById('simLimit').value) || 10000);
-    // Persist credit limit separately from debt vault
-    localStorage.setItem('aura_credit_limit', limit);
-    // Update slider range to match new limit; keep balance proportion
-    const slider     = document.getElementById('simSlider');
-    const oldLimit   = parseFloat(slider.max) || 10000;
-    const oldBalance = parseFloat(slider.value) || 0;
-    const newBalance = Math.round((oldBalance / oldLimit) * limit);
-    slider.max   = limit;
-    slider.value = Math.min(newBalance, limit);
-    runSim(parseFloat(slider.value));
-}
-
-function runSim(val) {
-    const limit = Math.max(100, parseFloat(document.getElementById('simLimit').value) || 10000);
-    const pct   = Math.min((val / limit) * 100, 100);
-    const bar   = document.getElementById('simBar');
-    const badge = document.getElementById('simScore');
-    const track = document.querySelector('.progress-track');
-    const input = document.getElementById('simSlider');
-
-    document.getElementById('simVal').textContent =
-        '$' + Math.round(val).toLocaleString() + ' / $' + Math.round(limit).toLocaleString();
-    document.getElementById('simPctLabel').textContent = pct.toFixed(1) + '% utilized';
-
-    bar.style.width = pct + '%';
-    bar.className   = 'progress-bar';
-    badge.className = 'sim-badge';
-
-    if (pct < 10) {
-        bar.classList.add('status-elite');
-        badge.classList.add('status-elite');
-        badge.textContent = 'OPTIMIZED (ELITE)';
-    } else if (pct < 30) {
-        bar.classList.add('status-healthy');
-        badge.classList.add('status-healthy');
-        badge.textContent = 'HEALTHY RANGE';
-    } else if (pct < 50) {
-        bar.classList.add('status-risk');
-        badge.classList.add('status-risk');
-        badge.textContent = 'SCORE PENALTY RISK';
+  // Strategy comparison banner
+  const banner = document.getElementById('plan-compare');
+  if (simAlt) {
+    const intDiff   = simAlt.totalInterest - sim.totalInterest;
+    const monDiff   = simAlt.totalMonths   - sim.totalMonths;
+    const isBetter  = intDiff > 0;
+    const altName   = S.strategy === 'avalanche' ? 'Snowball' : 'Avalanche';
+    const curName   = S.strategy === 'avalanche' ? 'Avalanche' : 'Snowball';
+    banner.className = 'compare-banner' + (isBetter ? '' : ' warn');
+    if (isBetter) {
+      banner.innerHTML = `
+        <div class="compare-title">✓ ${curName} is saving you more</div>
+        <div class="compare-body">
+          $${fmtK(Math.abs(intDiff))} less interest vs ${altName}
+          <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} faster</span>
+        </div>`;
     } else {
-        bar.classList.add('status-risk');
-        badge.classList.add('status-risk');
-        badge.textContent = 'HIGH IMPACT — PAY DOWN';
+      banner.innerHTML = `
+        <div class="compare-title">⚡ Switch to ${altName} to save more</div>
+        <div class="compare-body">
+          $${fmtK(Math.abs(intDiff))} more interest with ${curName}
+          <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} longer</span>
+        </div>`;
     }
+  }
 
-    track.setAttribute('aria-valuenow', Math.round(pct));
-    input.setAttribute('aria-valuenow', Math.round(val));
+  // Payoff order list
+  const order  = getPayoffOrder();
+  const ol     = document.getElementById('p-order');
+  ol.innerHTML = '';
+  order.forEach((id, i) => {
+    const d       = S.debts.find(x => x.id === id);
+    if (!d) return;
+    const payMonth = sim.payoffMonths[d.id] ?? sim.totalMonths;
+    const pd = new Date();
+    pd.setMonth(pd.getMonth() + payMonth);
+    const payStr = pd.toLocaleDateString('en-US', { month:'short', year:'numeric' });
+
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div class="po-num c${d.colorIdx % COLORHEX.length}">${i+1}</div>
+      <div class="po-meta">
+        <div class="po-name">${esc(d.name)}</div>
+        <div class="po-rate">${d.rate}% APR · $${fmtK(d.balance)}</div>
+      </div>
+      <div class="po-date">${payStr}</div>
+    `;
+    ol.appendChild(li);
+  });
 }
 
-// ─── UTILS ───────────────────────────────────────────────────────────────────
-function setupSlider() {
-    const slider          = document.getElementById('slider');
-    const monthlyInterest = state.bal * (state.rate / 100 / 12);
-    const minPay          = Math.ceil(Math.max(state.min, monthlyInterest + 1));
-    const rawMax          = Math.ceil(state.bal / 5);
-    const maxPay          = rawMax > minPay ? rawMax : minPay + 500;
-
-    slider.min   = minPay;
-    slider.max   = maxPay;
-    // Start at minimum payment so the user sees the baseline (ring empty = room to improve)
-    slider.value = minPay;
-
-    slider.setAttribute('aria-valuemin', minPay);
-    slider.setAttribute('aria-valuemax', maxPay);
-    slider.setAttribute('aria-valuenow', minPay);
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+/** Get debt IDs in payoff order for current strategy (no simulation needed) */
+function getPayoffOrder() {
+  const sorted = [...S.debts];
+  if (S.strategy === 'avalanche') sorted.sort((a,b) => b.rate - a.rate);
+  else                            sorted.sort((a,b) => a.balance - b.balance);
+  return sorted.map(d => d.id);
 }
 
-function nav(viewId, btn) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById('view-' + viewId).classList.add('active');
-
-    document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-    });
-
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
+function set(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
 }
 
-// ─── MODAL / FOCUS TRAP ───────────────────────────────────────────────────────
+function fmt(n, dec=0) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+}
+
+function fmtK(n) {
+  n = Math.round(n);
+  if (n >= 1_000_000) return (n/1_000_000).toFixed(1) + 'M';
+  if (n >= 10_000)    return (n/1_000).toFixed(0) + 'k';
+  return n.toLocaleString();
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+// ─── NAVIGATION ────────────────────────────────────────────────────────────
+function goTo(viewId, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('v-' + viewId).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  (btn || document.getElementById('nav-' + viewId)).classList.add('active');
+}
+
+// ─── ADD / EDIT DEBT ───────────────────────────────────────────────────────
+function openAdd() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add Debt';
+  document.getElementById('f-name').value  = '';
+  document.getElementById('f-bal').value   = '';
+  document.getElementById('f-rate').value  = '';
+  document.getElementById('f-min').value   = '';
+  document.getElementById('f-error').classList.remove('show');
+  document.getElementById('f-error').textContent = '';
+  document.getElementById('quick-types').style.display = '';
+  document.getElementById('debt-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 350);
+}
+
+function openEdit(id) {
+  const d = S.debts.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Debt';
+  document.getElementById('f-name').value  = d.name;
+  document.getElementById('f-bal').value   = d.balance;
+  document.getElementById('f-rate').value  = d.rate;
+  document.getElementById('f-min').value   = d.minPayment;
+  document.getElementById('f-error').classList.remove('show');
+  document.getElementById('quick-types').style.display = 'none';
+  document.getElementById('debt-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 350);
+}
+
+function closeDebtModal(e) {
+  if (e && e.target !== document.getElementById('debt-overlay')) return;
+  document.getElementById('debt-overlay').classList.remove('open');
+}
+
+function quickType(name) {
+  document.getElementById('f-name').value = name;
+  document.getElementById('f-bal').focus();
+}
+
+function saveDebt() {
+  const name = document.getElementById('f-name').value.trim();
+  const bal  = parseFloat(document.getElementById('f-bal').value);
+  const rate = parseFloat(document.getElementById('f-rate').value);
+  const min  = parseFloat(document.getElementById('f-min').value);
+
+  const errEl = document.getElementById('f-error');
+  errEl.classList.remove('show');
+
+  // Validation
+  const bad = !name
+    ? 'Please enter a debt name.'
+    : (!Number.isFinite(bal) || bal <= 0)
+      ? 'Enter a valid balance greater than $0.'
+      : (!Number.isFinite(rate) || rate < 0 || rate > 100)
+        ? 'Enter a valid APR between 0% and 100%.'
+        : (!Number.isFinite(min) || min <= 0)
+          ? 'Enter a valid minimum payment.'
+          : (min <= bal * rate / 100 / 12 && rate > 0)
+            ? `Min payment must exceed monthly interest ($${Math.ceil(bal * rate / 100 / 12) + 1}/mo required).`
+            : null;
+
+  if (bad) {
+    errEl.textContent = bad;
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (editingId) {
+    const idx = S.debts.findIndex(d => d.id === editingId);
+    if (idx !== -1) {
+      S.debts[idx] = { ...S.debts[idx], name, balance: bal, rate, minPayment: min };
+    }
+  } else {
+    const colorIdx = S.debts.length % COLORS.length;
+    S.debts.push({ id: uid(), name, balance: bal, rate, minPayment: min, colorIdx });
+  }
+
+  save();
+  document.getElementById('debt-overlay').classList.remove('open');
+  render();
+}
+
+function deleteDebt(id) {
+  if (!confirm('Remove this debt?')) return;
+  S.debts = S.debts.filter(d => d.id !== id);
+  save();
+  render();
+}
+
+// ─── STRATEGY / EXTRA ──────────────────────────────────────────────────────
+function setStrategy(s) {
+  S.strategy = s;
+  save();
+  render();
+}
+
+function setExtra(val) {
+  S.extra = val;
+  set('p-extra-val', val.toLocaleString());
+  save();
+  render();
+}
+
+// ─── SETTINGS ──────────────────────────────────────────────────────────────
 function openSettings() {
-    const modal = document.getElementById('settingsModal');
-    modal.classList.add('open');
-    modal.removeAttribute('aria-hidden');
-    clearModalError();
-    setTimeout(() => document.getElementById('inBal').focus(), 50);
-    document.addEventListener('keydown', handleModalKeydown);
+  document.getElementById('settings-overlay').classList.add('open');
 }
 
-function closeSettings() {
-    const modal = document.getElementById('settingsModal');
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.removeEventListener('keydown', handleModalKeydown);
-    document.getElementById('settingsBtn').focus();
+function closeSettings(e) {
+  if (e && e.target !== document.getElementById('settings-overlay')) return;
+  document.getElementById('settings-overlay').classList.remove('open');
 }
 
-function handleModalKeydown(e) {
-    if (e.key === 'Escape') { closeSettings(); return; }
-    if (e.key !== 'Tab') return;
-
-    const modal     = document.getElementById('settingsModal');
-    const focusable = Array.from(modal.querySelectorAll('input, button:not([disabled])'));
-    const first     = focusable[0];
-    const last      = focusable[focusable.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-        last.focus(); e.preventDefault();
-    } else if (!e.shiftKey && document.activeElement === last) {
-        first.focus(); e.preventDefault();
-    }
+function wipeAll() {
+  if (!confirm('Delete all data? This cannot be undone.')) return;
+  localStorage.removeItem(KEY);
+  location.reload();
 }
 
-function showModalError(msg) {
-    const el = document.getElementById('modalError');
-    el.textContent = msg;
-    el.classList.add('visible');
+// ─── LAUNCH ────────────────────────────────────────────────────────────────
+function launch() {
+  document.getElementById('splash').classList.add('out');
+  setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+
+  // First-time users: take them straight to debts view to add their first debt
+  if (!S.debts.length) {
+    goTo('debts', null);
+    setTimeout(() => openAdd(), 600);
+  }
 }
 
-function clearModalError() {
-    const el = document.getElementById('modalError');
-    el.textContent = '';
-    el.classList.remove('visible');
-    document.querySelectorAll('.clean-input.field-error')
-             .forEach(input => input.classList.remove('field-error'));
-}
+// ─── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('debt-overlay').classList.remove('open');
+    document.getElementById('settings-overlay').classList.remove('open');
+  }
+  if (e.key === 'Enter' && document.getElementById('debt-overlay').classList.contains('open')) {
+    saveDebt();
+  }
+});
 
-// ─── BOOTSTRAP ───────────────────────────────────────────────────────────────
-(function initRing() {
-    const ring = document.getElementById('auraRing');
-    ring.style.strokeDasharray  = RING_CIRC;
-    ring.style.strokeDashoffset = RING_CIRC; // start empty; updateApp will fill it
-}());
+// ─── BOOTSTRAP ─────────────────────────────────────────────────────────────
+load();
+render();
+
 </script>
 </body>
 </html>
