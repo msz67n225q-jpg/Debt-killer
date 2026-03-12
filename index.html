@@ -1235,8 +1235,10 @@ function renderMission(sim) {
   set('m-int-saved',  intSaved > 0 ? '$' + fmtK(intSaved) : '$0');
   set('m-time-saved', moSavedStr);
 
-  // ── Daily interest burn (current balances) ────────────────────────────────
-  const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
+  // ── Daily interest burn — avg over payoff period at current payment ─────────
+  const dailyBurn = sim.totalMonths > 0
+    ? sim.totalInterest / sim.totalMonths / 30.44
+    : S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
   set('m-burn-val', '$' + fmt(dailyBurn, 2) + '/day in interest');
 
   // ── Totals ────────────────────────────────────────────────────────────────
