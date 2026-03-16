@@ -616,6 +616,43 @@ input[type=range]:focus { outline:none; }
 /* Smooth number transitions */
 [data-anim] { transition:opacity .2s; }
 [data-anim].flash { opacity:.3; }
+
+/* ─── TOAST ─────────────────────────────────────────────────────────────── */
+#toast {
+  position:fixed; bottom:108px; left:50%;
+  transform:translateX(-50%) translateY(6px);
+  background:var(--s1); border:1px solid var(--border2);
+  border-radius:100px; padding:10px 22px;
+  font-size:13px; font-weight:600; color:var(--text);
+  z-index:950; opacity:0; pointer-events:none;
+  transition:opacity .22s, transform .22s;
+  white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ─── CONFIRM DANGER BUTTON ─────────────────────────────────────────────── */
+.btn-danger {
+  background:var(--red) !important;
+  box-shadow:0 0 24px rgba(239,68,68,.3) !important;
+}
+.btn-danger:hover { box-shadow:0 0 36px rgba(239,68,68,.5) !important; }
+
+/* ─── SLIDER TRACK FILL ─────────────────────────────────────────────────── */
+input[type=range] {
+  --fill: 0%;
+  background:linear-gradient(to right,
+    var(--p1) 0%, var(--p1) var(--fill),
+    var(--s2) var(--fill), var(--s2) 100%
+  );
+}
+
+/* ─── DEBT CARD ENTRANCE ────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0);   }
+}
+.debt-card { animation:fadeInUp .22s ease both; }
 </style>
 </head>
 <body>
@@ -725,7 +762,7 @@ input[type=range]:focus { outline:none; }
           </div>
           <input type="range" id="m-slider"
                  min="0" max="2000" step="10" value="0"
-                 oninput="missionSlider(+this.value)"
+                 oninput="missionSlider(+this.value);this.style.setProperty('--fill',((this.value-this.min)/(this.max-this.min)*100)+'%')"
                  aria-label="Total monthly payment amount">
           <div class="pay-sublabel">
             <span id="m-slider-min-lbl">Min $0</span>
@@ -737,12 +774,12 @@ input[type=range]:focus { outline:none; }
         <div class="grid2">
           <div class="save-card">
             <div class="label">INTEREST SAVED</div>
-            <div class="val grn" id="m-int-saved">$0</div>
+            <div class="val grn" id="m-int-saved" aria-live="polite">$0</div>
             <div class="sub">vs minimum only</div>
           </div>
           <div class="save-card">
             <div class="label">TIME SAVED</div>
-            <div class="val" id="m-time-saved">0 mo</div>
+            <div class="val" id="m-time-saved" aria-live="polite">0 mo</div>
             <div class="sub">vs minimum only</div>
           </div>
         </div>
@@ -756,7 +793,7 @@ input[type=range]:focus { outline:none; }
           </div>
           <div class="stat-card">
             <div class="label">TOTAL INTEREST</div>
-            <div class="val red" id="m-total-int">$0</div>
+            <div class="val red" id="m-total-int" aria-live="polite">$0</div>
             <div class="sub">at this payment</div>
           </div>
         </div>
@@ -842,7 +879,7 @@ input[type=range]:focus { outline:none; }
 
       <!-- ③ Free Guides -->
       <div class="sect">FREE GUIDES</div>
-      <div class="card guide-card" onclick="alert('Guide coming soon')">
+      <div class="card guide-card" onclick="showToast('Guide coming soon — stay tuned!')">
         <div class="guide-icon">📋</div>
         <div class="guide-meta">
           <div class="guide-title">Balance Transfer Playbook</div>
@@ -850,7 +887,7 @@ input[type=range]:focus { outline:none; }
         </div>
         <div class="guide-arrow">›</div>
       </div>
-      <div class="card guide-card" onclick="alert('Guide coming soon')">
+      <div class="card guide-card" onclick="showToast('Guide coming soon — stay tuned!')">
         <div class="guide-icon">📞</div>
         <div class="guide-meta">
           <div class="guide-title">Rate Negotiation Script</div>
@@ -858,7 +895,7 @@ input[type=range]:focus { outline:none; }
         </div>
         <div class="guide-arrow">›</div>
       </div>
-      <div class="card guide-card" onclick="alert('Guide coming soon')">
+      <div class="card guide-card" onclick="showToast('Guide coming soon — stay tuned!')">
         <div class="guide-icon">📈</div>
         <div class="guide-meta">
           <div class="guide-title">Credit Score Accelerator</div>
@@ -936,6 +973,22 @@ input[type=range]:focus { outline:none; }
   </div>
 </div>
 
+<!-- ══ TOAST ════════════════════════════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+<!-- ══ CONFIRM MODAL ══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="confirm-title" style="font-size:18px;margin-bottom:10px"></div>
+    <p id="confirm-body" style="font-size:14px;color:var(--dim2);line-height:1.6;margin-bottom:28px"></p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="_confirmNo()">CANCEL</button>
+      <button class="modal-save btn-danger" id="confirm-ok-btn" onclick="_confirmYes()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ADD / EDIT DEBT MODAL ═══════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="debt-overlay" onclick="closeDebtModal(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -1008,7 +1061,7 @@ let editingId = null;
 
 // ─── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem(KEY, JSON.stringify(S));
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(_) {}
 }
 
 function load() {
@@ -1188,9 +1241,15 @@ function renderMission(sim) {
   slider.max   = sliderMax;
   slider.value = Math.min(sliderVal, sliderMax);
 
-  set('m-slider-min-lbl', 'Min $' + fmtK(totalMin));
-  set('m-slider-max-lbl', '$'     + fmtK(sliderMax));
-  set('m-pay-amount',     '$'     + fmtK(sliderVal));
+  set('m-slider-min-lbl', 'Min ' + fmtDollar(totalMin));
+  set('m-slider-max-lbl', fmtDollar(sliderMax));
+  set('m-pay-amount',     fmtDollar(sliderVal));
+
+  // Slider track fill (CSS variable)
+  const sliderPct = slider.max > slider.min
+    ? ((slider.value - slider.min) / (slider.max - slider.min) * 100)
+    : 0;
+  slider.style.setProperty('--fill', sliderPct + '%');
 
   // ── Freedom ring ──────────────────────────────────────────────────────────
   // Ring fill = time savings ratio vs minimum-only payments.
@@ -1232,13 +1291,14 @@ function renderMission(sim) {
     : moSaved < 24 ? moSaved + ' mo'
     : (moSaved / 12).toFixed(1) + ' yrs';
 
-  set('m-int-saved',  intSaved > 0 ? '$' + fmtK(intSaved) : '$0');
+  set('m-int-saved',  intSaved > 0 ? fmtDollar(intSaved) : '$0');
   set('m-time-saved', moSavedStr);
 
-  // ── Daily interest burn — avg over payoff period at current payment ─────────
-  const dailyBurn = sim.totalMonths > 0
-    ? sim.totalInterest / sim.totalMonths / 30.44
-    : S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
+  // ── Daily interest burn — what your debt accrues RIGHT NOW ────────────────
+  // This is the live accrual rate on current balances: balance × APR ÷ 365.
+  // It's a true, static motivational number ("you're burning $X today").
+  // Dynamic payoff impact is already shown in the savings cards below.
+  const dailyBurn = S.debts.reduce((s,d) => s + d.balance * d.rate / 100 / 365, 0);
   set('m-burn-val', '$' + fmt(dailyBurn, 2) + '/day in interest');
 
   // ── Totals ────────────────────────────────────────────────────────────────
@@ -1293,7 +1353,7 @@ function renderDebts(sim) {
   const order = getPayoffOrder();
 
   list.innerHTML = '';
-  S.debts.forEach(d => {
+  S.debts.forEach((d, i) => {
     const hex      = COLORHEX[d.colorIdx % COLORHEX.length];
     const payMonth = sim?.payoffMonths[d.id] ?? null;
     let payStr = '—';
@@ -1306,6 +1366,7 @@ function renderDebts(sim) {
 
     const card = document.createElement('div');
     card.className = 'debt-card';
+    card.style.animationDelay = (i * 50) + 'ms';
     card.innerHTML = `
       <div class="debt-card-stripe" style="background:${hex}"></div>
       <div class="debt-card-header">
@@ -1316,14 +1377,14 @@ function renderDebts(sim) {
         <div class="debt-card-rate">${d.rate}% APR</div>
       </div>
       <div class="debt-card-body">
-        <div class="debt-card-bal">$${fmtK(d.balance)}</div>
+        <div class="debt-card-bal">${fmtDollar(d.balance)}</div>
         <div class="debt-card-meta">
           <div class="debt-card-payoff-date">${payStr}</div>
           <div class="debt-card-payoff-label">debt free</div>
         </div>
       </div>
       <div class="debt-card-footer">
-        <div class="debt-card-min">Min $${fmtK(d.minPayment)}/mo</div>
+        <div class="debt-card-min">Min ${fmtDollar(d.minPayment)}/mo</div>
         <div class="debt-card-actions">
           <button class="debt-action-btn" onclick="openEdit('${d.id}')" aria-label="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -1375,17 +1436,25 @@ function renderPlan(sim, simAlt) {
   if (simAlt) {
     const intDiff  = simAlt.totalInterest - sim.totalInterest;
     const monDiff  = simAlt.totalMonths   - sim.totalMonths;
-    const isBetter = intDiff > 0;
     const altName  = S.strategy === 'avalanche' ? 'Quick Wins' : 'Smart Pay';
     const curName  = S.strategy === 'avalanche' ? 'Smart Pay' : 'Quick Wins';
-    banner.className = 'compare-banner' + (isBetter ? '' : ' warn');
-    banner.innerHTML = isBetter
-      ? `<div class="compare-title">✓ ${curName} saves you more</div>
-         <div class="compare-body">$${fmtK(Math.abs(intDiff))} less interest
-           <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} faster than ${altName}</span></div>`
-      : `<div class="compare-title">⚡ Switch to ${altName} to save more</div>
-         <div class="compare-body">$${fmtK(Math.abs(intDiff))} extra interest with ${curName}
-           <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} longer</span></div>`;
+
+    if (Math.abs(intDiff) < 1 && Math.abs(monDiff) < 1) {
+      // Strategies are equivalent (e.g. single debt)
+      banner.className = 'compare-banner';
+      banner.innerHTML = `<div class="compare-title">Both strategies are equivalent</div>
+         <div class="compare-body">Your debts pay off the same way either way.</div>`;
+    } else {
+      const isBetter = intDiff > 0;
+      banner.className = 'compare-banner' + (isBetter ? '' : ' warn');
+      banner.innerHTML = isBetter
+        ? `<div class="compare-title">✓ ${curName} saves you more</div>
+           <div class="compare-body">${fmtDollar(Math.abs(intDiff))} less interest
+             <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} faster than ${altName}</span></div>`
+        : `<div class="compare-title">⚡ Switch to ${altName} to save more</div>
+           <div class="compare-body">${fmtDollar(Math.abs(intDiff))} extra interest with ${curName}
+             <span>· ${Math.abs(monDiff)} month${Math.abs(monDiff) !== 1 ? 's' : ''} longer</span></div>`;
+    }
   }
 
   // Payoff order list
@@ -1404,7 +1473,7 @@ function renderPlan(sim, simAlt) {
       <div class="po-num c${d.colorIdx % COLORHEX.length}">${i+1}</div>
       <div class="po-meta">
         <div class="po-name">${esc(d.name)}</div>
-        <div class="po-rate">${d.rate}% APR · $${fmtK(d.balance)}</div>
+        <div class="po-rate">${d.rate}% APR · ${fmtDollar(d.balance)}</div>
       </div>
       <div class="po-date">${payStr}</div>`;
     ol.appendChild(li);
@@ -1442,8 +1511,14 @@ function fmt(n, dec=0) {
 function fmtK(n) {
   n = Math.round(n);
   if (n >= 1_000_000) return (n/1_000_000).toFixed(1) + 'M';
-  if (n >= 10_000)    return (n/1_000).toFixed(0) + 'k';
+  if (n >= 100_000)   return Math.round(n/1_000) + 'k';
+  if (n >= 10_000)    return (n/1_000).toFixed(1) + 'k';
   return n.toLocaleString();
+}
+
+/** Full dollar amount with commas, no abbreviation — for balances & payments */
+function fmtDollar(n) {
+  return '$' + Math.round(n).toLocaleString('en-US');
 }
 
 function esc(s) {
@@ -1462,6 +1537,7 @@ function goTo(viewId, btn) {
   document.getElementById('v-' + viewId).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   (btn || document.getElementById('nav-' + viewId)).classList.add('active');
+  haptic();
 }
 
 // ─── ADD / EDIT DEBT ───────────────────────────────────────────────────────
@@ -1541,6 +1617,7 @@ function saveDebt() {
     const isFirst = S.debts.length === 0;
     const colorIdx = S.debts.length % COLORS.length;
     S.debts.push({ id: uid(), name, balance: bal, rate, minPayment: min, colorIdx });
+    haptic();
     save();
     document.getElementById('debt-overlay').classList.remove('open');
     render();
@@ -1548,16 +1625,34 @@ function saveDebt() {
     return;
   }
 
+  haptic();
   save();
   document.getElementById('debt-overlay').classList.remove('open');
   render();
 }
 
 function deleteDebt(id) {
-  if (!confirm('Remove this debt?')) return;
-  S.debts = S.debts.filter(d => d.id !== id);
-  save();
-  render();
+  const d = S.debts.find(x => x.id === id);
+  if (!d) return;
+  showConfirm(
+    'Remove "' + d.name + '"?',
+    'This debt and all its data will be permanently deleted.',
+    'REMOVE', 'danger',
+    () => {
+      haptic('medium');
+      S.debts = S.debts.filter(x => x.id !== id);
+      // Cap extra so slider stays within valid range after deletion
+      if (S.debts.length) {
+        const newTotalDebt = S.debts.reduce((s,x) => s + x.balance, 0);
+        const maxExtra = Math.max(Math.ceil((newTotalDebt / 6) / 50) * 50, 500);
+        S.extra = Math.min(S.extra, maxExtra);
+      } else {
+        S.extra = 0;
+      }
+      save();
+      render();
+    }
+  );
 }
 
 // ─── STRATEGY / EXTRA ──────────────────────────────────────────────────────
@@ -1574,6 +1669,43 @@ function setExtra(val) {
   render();
 }
 
+// ─── HAPTIC ────────────────────────────────────────────────────────────────
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  navigator.vibrate(type === 'medium' ? 30 : type === 'heavy' ? 60 : 10);
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ─── CONFIRM MODAL ─────────────────────────────────────────────────────────
+let _confirmCb = null;
+function showConfirm(title, body, okLabel, okStyle, cb) {
+  _confirmCb = cb;
+  set('confirm-title', title);
+  set('confirm-body',  body);
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.textContent = okLabel || 'CONFIRM';
+  btn.className   = 'modal-save' + (okStyle === 'danger' ? ' btn-danger' : '');
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function _confirmYes() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  const cb = _confirmCb; _confirmCb = null;
+  if (cb) cb();
+}
+function _confirmNo() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  _confirmCb = null;
+}
+
 // ─── SETTINGS ──────────────────────────────────────────────────────────────
 function openSettings() {
   document.getElementById('settings-overlay').classList.add('open');
@@ -1585,9 +1717,16 @@ function closeSettings(e) {
 }
 
 function wipeAll() {
-  if (!confirm('Delete all data? This cannot be undone.')) return;
-  localStorage.removeItem(KEY);
-  location.reload();
+  closeSettings();
+  showConfirm(
+    'Reset all data?',
+    'Every debt and all settings will be permanently deleted. This cannot be undone.',
+    'DELETE ALL', 'danger',
+    () => {
+      try { localStorage.removeItem(KEY); } catch(_) {}
+      location.reload();
+    }
+  );
 }
 
 // ─── LAUNCH ────────────────────────────────────────────────────────────────
@@ -1595,7 +1734,7 @@ function launch() {
   document.getElementById('splash').classList.add('out');
   setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
 
-  // First-time users: take them straight to debts view to add their first debt
+  // First-time users: go to debts view and open add modal
   if (!S.debts.length) {
     goTo('debts', null);
     setTimeout(() => openAdd(), 600);
@@ -1607,6 +1746,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('debt-overlay').classList.remove('open');
     document.getElementById('settings-overlay').classList.remove('open');
+    _confirmNo();
   }
   if (e.key === 'Enter' && document.getElementById('debt-overlay').classList.contains('open')) {
     saveDebt();
@@ -1627,10 +1767,21 @@ document.addEventListener('keydown', e => {
 load();
 render();
 
+// Returning users bypass splash immediately; first-timers see it
+if (S.debts.length > 0) {
+  const splash = document.getElementById('splash');
+  splash.style.display = 'none';
+}
+
+// Handle PWA shortcut: ?action=add — only for returning users (new users get onboarding)
+if (new URLSearchParams(location.search).get('action') === 'add' && S.debts.length > 0) {
+  setTimeout(() => openAdd(), 300);
+}
+
 // ── Service Worker registration ─────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {/* silent fail in dev */});
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
 
