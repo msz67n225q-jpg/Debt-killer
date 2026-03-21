@@ -7,6 +7,7 @@
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0a0812">
+<meta name="mobile-web-app-capable" content="yes">
 
 <!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,11 +15,27 @@
 <meta name="apple-mobile-web-app-title" content="ZERO">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 
+<!-- iOS splash screens (generated via PWABuilder or Xcode asset catalog) -->
+<link rel="apple-touch-startup-image" href="/icons/splash-1170x2532.png"
+      media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="/icons/splash-1125x2436.png"
+      media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="/icons/splash-750x1334.png"
+      media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)">
+
 <!-- SEO / share -->
-<meta name="description" content="Crush every debt. See your freedom date. Pay less interest.">
-<meta property="og:title" content="ZERO — Debt Elimination Engine">
-<meta property="og:description" content="Crush every debt. See your freedom date. Pay less interest.">
-<meta property="og:type" content="website">
+<meta name="description" content="Beat debt with a day-by-day payoff plan. See your freedom date, track every balance, and watch interest savings grow.">
+<meta property="og:title"       content="ZERO — Debt Elimination Engine">
+<meta property="og:description" content="Beat debt with a day-by-day payoff plan. See your freedom date, track every balance, and watch interest savings grow.">
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://debt-killer.vercel.app/">
+<meta property="og:image"       content="https://debt-killer.vercel.app/icons/icon-512.png">
+<meta property="og:locale"      content="en_US">
+<meta property="og:site_name"   content="ZERO">
+<meta name="twitter:card"       content="summary">
+<meta name="twitter:title"      content="ZERO — Debt Elimination Engine">
+<meta name="twitter:description" content="Beat debt. See your freedom date. Pay less interest.">
+<meta name="twitter:image"      content="https://debt-killer.vercel.app/icons/icon-512.png">
 
 <title>ZERO — Kill Your Debt</title>
 <style>
@@ -839,7 +856,7 @@ input[type=range] {
         <div class="cta-eyebrow">FREE · NO OBLIGATION</div>
         <div class="cta-title">Get a Free Debt Review</div>
         <div class="cta-body">Talk to a certified credit counselor — we'll map out your fastest path to zero.</div>
-        <button class="cta-btn" onclick="window.open('#','_blank')">BOOK FREE SESSION →</button>
+        <button class="cta-btn" id="cta-book-btn" onclick="openBookingOrToast()">BOOK FREE SESSION →</button>
         <div class="cta-trust">Trusted by thousands · Non-profit certified · Free</div>
       </div>
 
@@ -1667,6 +1684,17 @@ function setExtra(val) {
   set('p-extra-val', val.toLocaleString());
   save();
   render();
+}
+
+// ─── CTA BOOKING ───────────────────────────────────────────────────────────
+// Replace BOOKING_URL with your real scheduling link (Calendly, Cal.com, etc.)
+const BOOKING_URL = '';
+function openBookingOrToast() {
+  if (BOOKING_URL) {
+    window.open(BOOKING_URL, '_blank', 'noopener,noreferrer');
+  } else {
+    showToast('Booking coming soon — check back shortly!');
+  }
 }
 
 // ─── HAPTIC ────────────────────────────────────────────────────────────────
