@@ -581,6 +581,101 @@ input[type=range]:focus { outline:none; }
 .tip-title { font-size:13px; font-weight:700; color:#fff; margin-bottom:4px; }
 .tip-text  { font-size:12px; color:var(--dim2); line-height:1.55; }
 
+/* ─── UPGRADE SHEET ────────────────────────────────────────────────────────── */
+.upgrade-overlay {
+  position:fixed; inset:0; z-index:290;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+}
+.upgrade-overlay.hidden { display:none; }
+.upgrade-sheet {
+  position:fixed; bottom:0; left:0; right:0; z-index:295;
+  background:var(--bg1); border-radius:28px 28px 0 0;
+  border-top:1px solid rgba(168,85,247,.35);
+  box-shadow:0 -8px 48px rgba(0,0,0,.55);
+  padding:12px 24px 44px;
+  transform:translateY(110%);
+  transition:transform .38s cubic-bezier(.32,.72,0,1);
+}
+.upgrade-sheet.open { transform:translateY(0); }
+.sheet-handle {
+  width:36px; height:4px; border-radius:2px;
+  background:var(--s2); margin:0 auto 24px;
+}
+.upgrade-eyebrow {
+  font-size:10px; font-weight:700; letter-spacing:2px; color:var(--p2);
+  text-transform:uppercase; margin-bottom:10px;
+}
+.upgrade-title {
+  font-size:24px; font-weight:900; color:#fff;
+  line-height:1.15; margin-bottom:22px; letter-spacing:-.3px;
+}
+.upgrade-features {
+  list-style:none; display:flex; flex-direction:column; gap:16px; margin-bottom:24px;
+}
+.upgrade-features li { display:flex; gap:14px; align-items:flex-start; }
+.feat-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.feat-body { flex:1; }
+.feat-title { font-size:13px; font-weight:700; color:#fff; margin-bottom:2px; }
+.feat-sub   { font-size:12px; color:var(--dim2); line-height:1.4; }
+.upgrade-price-row {
+  display:flex; align-items:baseline; gap:10px; margin-bottom:18px;
+}
+.upgrade-price {
+  font-size:26px; font-weight:900; color:#fff; letter-spacing:-.5px;
+}
+.upgrade-per  { font-size:13px; font-weight:500; color:var(--dim2); }
+.upgrade-trial {
+  font-size:11px; font-weight:600; color:var(--green);
+  background:rgba(52,211,153,.1); border-radius:100px; padding:3px 10px;
+}
+.upgrade-btn {
+  display:block; width:100%; text-align:center;
+  background:linear-gradient(135deg,var(--p1),var(--p2));
+  color:#fff; font-size:14px; font-weight:800; letter-spacing:.8px;
+  padding:16px; border-radius:14px;
+  box-shadow:0 4px 24px rgba(168,85,247,.4); margin-bottom:12px;
+  transition:transform .15s, box-shadow .15s;
+}
+.upgrade-btn:active { transform:scale(.97); }
+.restore-btn {
+  display:block; width:100%; text-align:center;
+  font-size:12px; color:var(--dim); padding:8px;
+}
+
+/* ─── AI CHAT CARD (premium guide tab) ────────────────────────────────────── */
+.ai-premium-card {
+  background:linear-gradient(150deg,rgba(99,102,241,.18) 0%,rgba(168,85,247,.14) 100%);
+}
+.ai-chips {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;
+}
+.ai-chip {
+  font-size:12px; font-weight:600; color:var(--p2);
+  background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.28);
+  border-radius:100px; padding:7px 14px; white-space:nowrap;
+  transition:background .15s;
+}
+.ai-chip:active { background:rgba(168,85,247,.28); }
+.ai-input-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.ai-input {
+  flex:1; background:var(--s0); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px;
+  font-size:14px; color:#fff; font-family:inherit;
+}
+.ai-input::placeholder { color:var(--dim); }
+.ai-input:focus { outline:none; border-color:rgba(168,85,247,.6); }
+.ai-send {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  background:linear-gradient(135deg,var(--p1),var(--p2));
+  color:#fff; font-size:18px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.ai-send:active { opacity:.8; }
+.ai-disclaimer { font-size:10px; color:var(--dim); margin-bottom:14px; letter-spacing:.3px; }
+.ai-divider    { height:1px; background:var(--border); margin-bottom:14px; }
+.counseling-fallback { font-size:12px; color:var(--dim); text-align:center; }
+.counseling-link { font-size:12px; color:var(--p2); font-weight:600; }
+
 /* ─── MODAL (Add / Edit Debt) ──────────────────────────────────────────────── */
 .modal-overlay {
   position:fixed; inset:0; z-index:800;
@@ -1072,6 +1167,50 @@ input[type=range] {
 
 <!-- ══ TOAST ════════════════════════════════════════════════════════════════════ -->
 <div id="toast"></div>
+
+<!-- ══ UPGRADE SHEET ══════════════════════════════════════════════════════════════ -->
+<div id="upgrade-overlay" class="upgrade-overlay hidden" onclick="closeUpgradeSheet()"></div>
+<div id="upgrade-sheet" class="upgrade-sheet" aria-modal="true" role="dialog">
+  <div class="sheet-handle"></div>
+  <div class="upgrade-eyebrow">✨ DEBT KILLER PRO</div>
+  <div class="upgrade-title">Everything you need<br>to get to zero</div>
+  <ul class="upgrade-features">
+    <li>
+      <span class="feat-icon">🤖</span>
+      <div class="feat-body">
+        <div class="feat-title">AI Debt Advisor</div>
+        <div class="feat-sub">Personalized guidance based on your actual uploaded debts</div>
+      </div>
+    </li>
+    <li>
+      <span class="feat-icon">📋</span>
+      <div class="feat-body">
+        <div class="feat-title">Balance Transfer Playbook</div>
+        <div class="feat-sub">How to pay zero interest for up to 21 months</div>
+      </div>
+    </li>
+    <li>
+      <span class="feat-icon">📞</span>
+      <div class="feat-body">
+        <div class="feat-title">Rate Negotiation Script</div>
+        <div class="feat-sub">Word-for-word scripts that have lowered APRs by 5–10%</div>
+      </div>
+    </li>
+    <li>
+      <span class="feat-icon">📈</span>
+      <div class="feat-body">
+        <div class="feat-title">Credit Score Accelerator</div>
+        <div class="feat-sub">Boost your score while paying down debt, not after</div>
+      </div>
+    </li>
+  </ul>
+  <div class="upgrade-price-row">
+    <div class="upgrade-price">$4.99<span class="upgrade-per">/month</span></div>
+    <div class="upgrade-trial">7-day free trial</div>
+  </div>
+  <button class="upgrade-btn" onclick="purchase()">START FREE TRIAL →</button>
+  <button class="restore-btn" onclick="restorePurchases()">Already purchased? Restore</button>
+</div>
 
 <!-- ══ CONFIRM MODAL ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="confirm-overlay">
@@ -1766,6 +1905,126 @@ function setExtra(val) {
   render();
 }
 
+// ─── PREMIUM STATE ─────────────────────────────────────────────────────────
+// RevenueCat config — set these when wiring up payments
+// RC Purchases.js docs: https://www.revenuecat.com/docs/getting-started/web-sdk
+const RC_API_KEY    = '';  // Your RevenueCat public app key
+const RC_PRODUCT_ID = '';  // Your offering product ID, e.g. 'dk_pro_monthly'
+
+let isPremium = false;
+
+function loadPremiumStatus() {
+  // Production: replace with Purchases.getCustomerInfo() from RevenueCat SDK
+  // The SDK call would check entitlements server-side, not just localStorage.
+  try {
+    isPremium = JSON.parse(localStorage.getItem('dk_premium') || 'false');
+  } catch(_) {
+    isPremium = false;
+  }
+}
+
+// ─── UPGRADE SHEET ─────────────────────────────────────────────────────────
+function openUpgradeSheet() {
+  document.getElementById('upgrade-overlay').classList.remove('hidden');
+  document.getElementById('upgrade-sheet').classList.add('open');
+  haptic('medium');
+}
+
+function closeUpgradeSheet() {
+  document.getElementById('upgrade-overlay').classList.add('hidden');
+  document.getElementById('upgrade-sheet').classList.remove('open');
+}
+
+async function purchase() {
+  if (RC_API_KEY) {
+    // TODO: wire RevenueCat Purchases.js
+    // const { Purchases } = await import('https://unpkg.com/@revenuecat/purchases-js@latest/dist/purchases-js.js');
+    // Purchases.configure({ apiKey: RC_API_KEY });
+    // const { customerInfo } = await Purchases.purchase({ productId: RC_PRODUCT_ID });
+    // if (customerInfo.entitlements.active['pro']) { ... }
+    showToast('Payment coming soon — stay tuned!');
+    return;
+  }
+  // Dev stub: flip the flag locally
+  isPremium = true;
+  try { localStorage.setItem('dk_premium', 'true'); } catch(_) {}
+  closeUpgradeSheet();
+  renderGuideTab();
+  showToast('Pro unlocked!');
+  haptic('heavy');
+}
+
+async function restorePurchases() {
+  if (RC_API_KEY) {
+    // TODO: Purchases.restorePurchases()
+    showToast('Restore coming soon!');
+    return;
+  }
+  // Dev stub
+  await purchase();
+}
+
+// ─── RENDER GUIDE TAB ──────────────────────────────────────────────────────
+function renderGuideTab() {
+  const hero       = document.getElementById('cta-hero');
+  const guideCards = document.querySelectorAll('.guide-card');
+  const sectBadge  = document.querySelector('.sect-badge');
+
+  if (isPremium) {
+    // Premium: AI chat + counseling fallback
+    hero.className  = 'cta-card ai-premium-card';
+    hero.innerHTML  = `
+      <div class="cta-eyebrow">AI DEBT ADVISOR · PRO</div>
+      <div class="cta-title" style="font-size:22px;margin-bottom:12px">What would you like<br>to tackle first?</div>
+      <div class="ai-chips">
+        <button class="ai-chip" onclick="sendAiChip(this)">How do I pay faster?</button>
+        <button class="ai-chip" onclick="sendAiChip(this)">Should I consolidate?</button>
+        <button class="ai-chip" onclick="sendAiChip(this)">Explain my strategy</button>
+      </div>
+      <div class="ai-input-row">
+        <input class="ai-input" id="ai-input" placeholder="Ask about your debts…"
+          onkeydown="if(event.key==='Enter')sendAiMessage()">
+        <button class="ai-send" onclick="sendAiMessage()">→</button>
+      </div>
+      <div class="ai-disclaimer">Powered by Claude · Uses your exact debt data · Private</div>
+      <div class="ai-divider"></div>
+      <div class="counseling-fallback">
+        Prefer a human?
+        <button class="counseling-link" onclick="openBookingOrToast()">Book free session →</button>
+      </div>
+    `;
+
+    // Unlock guide cards
+    guideCards.forEach(card => {
+      card.classList.remove('guide-locked');
+      const lockEl = card.querySelector('.guide-unlock');
+      if (lockEl) lockEl.remove();
+      card.onclick = () => showToast('Full guide coming soon!');
+    });
+
+    if (sectBadge) sectBadge.textContent = 'INCLUDED';
+
+  } else {
+    // Free: locked guide cards open the upgrade sheet
+    guideCards.forEach(card => {
+      card.classList.add('guide-locked');
+      card.onclick = openUpgradeSheet;
+    });
+  }
+}
+
+// ─── AI ADVISOR STUBS ──────────────────────────────────────────────────────
+function sendAiMessage() {
+  const input = document.getElementById('ai-input');
+  if (!input || !input.value.trim()) return;
+  input.value = '';
+  showToast('AI Advisor launching soon — personalized to your debts!');
+}
+
+function sendAiChip() {
+  showToast('AI Advisor launching soon — personalized to your debts!');
+}
+
 // ─── CTA BOOKING ───────────────────────────────────────────────────────────
 // Replace BOOKING_URL with your real scheduling link (Calendly, Cal.com, etc.)
 const BOOKING_URL = '';
@@ -1775,18 +2034,6 @@ function openBookingOrToast() {
   } else {
     showToast('Booking coming soon — check back shortly!');
   }
-}
-
-/** Scroll the Guide tab to the top and pulse the CTA button */
-function scrollToBooking() {
-  const view = document.getElementById('v-plan');
-  view.scrollTo({ top: 0, behavior: 'smooth' });
-  const btn = document.getElementById('cta-book-btn');
-  btn.classList.remove('pulsing');
-  // Force reflow so re-adding the class triggers the animation again
-  void btn.offsetWidth;
-  btn.classList.add('pulsing');
-  btn.addEventListener('animationend', () => btn.classList.remove('pulsing'), { once: true });
 }
 
 // ─── HAPTIC ────────────────────────────────────────────────────────────────
@@ -1866,6 +2113,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('debt-overlay').classList.remove('open');
     document.getElementById('settings-overlay').classList.remove('open');
+    closeUpgradeSheet();
     _confirmNo();
   }
   if (e.key === 'Enter' && document.getElementById('debt-overlay').classList.contains('open')) {
@@ -1885,7 +2133,9 @@ document.addEventListener('keydown', e => {
 }());
 
 load();
+loadPremiumStatus();
 render();
+renderGuideTab();
 
 // Returning users bypass splash immediately; first-timers see it
 if (S.debts.length > 0) {
