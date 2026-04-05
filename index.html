@@ -1975,6 +1975,10 @@ let isPremium = false;
 function loadPremiumStatus() {
   // Production: replace with Purchases.getCustomerInfo() from RevenueCat SDK
   // The SDK call would check entitlements server-side, not just localStorage.
+  if (new URLSearchParams(location.search).get('preview') === 'premium') {
+    isPremium = true;
+    return;
+  }
   try {
     isPremium = JSON.parse(localStorage.getItem('dk_premium') || 'false');
   } catch(_) {
