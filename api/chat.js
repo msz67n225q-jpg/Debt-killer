@@ -73,9 +73,12 @@ export default async function handler(req) {
 
   let geminiRes;
   try {
-    geminiRes = await fetch(`${GEMINI_URL}&key=${apiKey}`, {
+    geminiRes = await fetch(GEMINI_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type':   'application/json',
+        'x-goog-api-key': apiKey,
+      },
       body:    JSON.stringify(geminiBody),
     });
   } catch (err) {
