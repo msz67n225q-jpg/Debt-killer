@@ -538,6 +538,12 @@ input[type=range]:focus { outline:none; }
 }
 .cta-btn.pulsing { animation:cta-pulse .6s ease 2; }
 .cta-trust { font-size:11px; color:var(--dim); text-align:center; }
+.upgrade-hero {
+  border-radius:22px; padding:24px 20px 20px;
+  background:linear-gradient(150deg,rgba(99,102,241,.12) 0%,rgba(168,85,247,.08) 100%);
+  border:1px solid rgba(168,85,247,.3);
+  margin-bottom:14px;
+}
 
 /* ─── SECTION ROW (label + badge inline) ───────────────────────────────────── */
 .sect-row {
@@ -1056,39 +1062,17 @@ input[type=range] {
     <!-- ══ GUIDE ════════════════════════════════════════════════════════════ -->
     <section id="v-plan" class="view">
 
-      <!-- ① CTA Hero -->
-      <div class="cta-card" id="cta-hero">
-        <div class="cta-eyebrow">FREE · 45 MIN · NO SALES PITCH</div>
-        <div class="cta-title">Get Your Free<br>Debt Review</div>
+      <!-- ① Upgrade Hero (free) / AI Chat (premium — swapped by renderGuideTab()) -->
+      <div class="upgrade-hero" id="cta-hero">
+        <div class="cta-eyebrow">ZERO PRO</div>
+        <div class="cta-title">Unlock Your Full<br>Debt Playbook</div>
         <ul class="cta-bullets">
-          <li>A custom payoff plan built around your income</li>
-          <li>Hidden savings most people never find</li>
-          <li>Which debts to attack first — and why</li>
-          <li>A certified counselor, not a salesperson</li>
+          <li>AI Debt Advisor — personalized answers using your actual numbers</li>
+          <li>3 premium guides — balance transfer, rate negotiation, credit score</li>
+          <li>Priority session booking with a certified counselor</li>
         </ul>
-        <button class="cta-btn" id="cta-book-btn" onclick="openBookingOrToast()">BOOK FREE SESSION →</button>
-        <div class="cta-trust">Non-profit certified · Confidential · Really free</div>
-      </div>
-
-      <!-- ② Strategy -->
-      <div class="sect">YOUR PAYOFF STRATEGY</div>
-      <div class="strategy-toggle">
-        <button class="strategy-opt active" id="opt-avalanche" onclick="setStrategy('avalanche')">
-          <div class="strategy-opt-name">⚡ SMART PAY</div>
-          <div class="strategy-opt-tag">HIGHEST RATE FIRST</div>
-        </button>
-        <button class="strategy-opt" id="opt-snowball" onclick="setStrategy('snowball')">
-          <div class="strategy-opt-name">🏆 QUICK WINS</div>
-          <div class="strategy-opt-tag">SMALLEST BALANCE FIRST</div>
-        </button>
-      </div>
-      <div class="strategy-explain" id="plan-explain"></div>
-      <div id="plan-compare" class="compare-banner hidden"></div>
-
-      <!-- Payoff order -->
-      <div class="sect">PAYOFF ORDER</div>
-      <div class="card">
-        <ul class="payoff-order" id="p-order"></ul>
+        <button class="cta-btn" onclick="openUpgradeSheet()">UNLOCK PRO — $4.99/mo →</button>
+        <div class="cta-trust">Cancel anytime · Takes 30 seconds</div>
       </div>
 
       <!-- Empty state -->
