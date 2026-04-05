@@ -552,33 +552,58 @@ input[type=range]:focus { outline:none; }
 }
 
 /* ─── GUIDE CARDS ───────────────────────────────────────────────────────────── */
-.guide-card { display:flex; align-items:flex-start; gap:14px; cursor:pointer; }
-.guide-card:active { opacity:.8; }
-.guide-icon { font-size:22px; flex-shrink:0; margin-top:2px; }
-.guide-meta { flex:1; }
-.guide-title { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+.guide-card { position:relative; display:flex; align-items:center; gap:14px; cursor:pointer; }
+.guide-card:active { opacity:.75; }
+.guide-meta { flex:1; min-width:0; }
+.guide-title { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; padding-right:56px; }
 .guide-sub   { font-size:12px; color:var(--dim2); line-height:1.5; }
-.guide-unlock {
-  margin-top:8px; font-size:11px; font-weight:600;
-  color:var(--p2); letter-spacing:.2px;
+
+/* Icon container */
+.guide-icon-wrap {
+  width:42px; height:42px; border-radius:14px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
 }
-.guide-locked { opacity:.85; }
-.guide-locked:hover { opacity:1; }
+.guide-icon-wrap svg { width:20px; height:20px; color:#fff; }
+.guide-icon-wrap.c-transfer { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+.guide-icon-wrap.c-phone    { background:linear-gradient(135deg,#a855f7,#ec4899); }
+.guide-icon-wrap.c-chart    { background:linear-gradient(135deg,#10b981,#06b6d4); }
+
+/* Lock / unlock badges */
+.guide-lock-badge {
+  position:absolute; top:50%; right:0; transform:translateY(-50%);
+  font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase;
+  color:var(--dim); background:var(--s2); border-radius:100px; padding:4px 9px;
+}
+.guide-arrow {
+  position:absolute; top:50%; right:0; transform:translateY(-50%);
+  font-size:18px; color:var(--p2); display:none; line-height:1;
+}
+/* CSS-driven lock/unlock state — no JS DOM mutation needed */
+.guide-card:not(.guide-locked) .guide-lock-badge { display:none; }
+.guide-card:not(.guide-locked) .guide-arrow      { display:block; }
+
+/* ─── SECTION HEADER MODIFIERS ──────────────────────────────────────────────── */
+.sect-inline { margin:0; }
+#plan-empty  { padding:40px 24px; }
 
 /* ─── TIP STRIP ─────────────────────────────────────────────────────────────── */
-.tip-strip { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-.tip-item {
-  display:flex; gap:14px; align-items:flex-start;
-  background:var(--s0); border:1px solid var(--border); border-radius:16px; padding:16px;
+.tip-strip {
+  display:flex; flex-direction:column; margin-bottom:14px;
+  background:var(--s0); border:1px solid var(--border); border-radius:20px; overflow:hidden;
 }
+.tip-item {
+  display:flex; gap:14px; align-items:flex-start; padding:16px;
+  border-bottom:1px solid var(--border);
+}
+.tip-item:last-child { border-bottom:none; }
 .tip-num {
-  width:22px; height:22px; border-radius:50%; flex-shrink:0;
-  background:var(--s2); color:var(--dim2);
+  width:24px; height:24px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff;
   font-size:10px; font-weight:800;
   display:flex; align-items:center; justify-content:center; margin-top:1px;
 }
 .tip-body { flex:1; }
-.tip-title { font-size:13px; font-weight:700; color:#fff; margin-bottom:4px; }
+.tip-title { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
 .tip-text  { font-size:12px; color:var(--dim2); line-height:1.55; }
 
 /* ─── UPGRADE SHEET ────────────────────────────────────────────────────────── */
@@ -647,8 +672,10 @@ input[type=range]:focus { outline:none; }
   background:linear-gradient(150deg,rgba(99,102,241,.18) 0%,rgba(168,85,247,.14) 100%);
 }
 .ai-chips {
-  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;
+  display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto;
+  scrollbar-width:none; margin-bottom:14px; padding-bottom:2px;
 }
+.ai-chips::-webkit-scrollbar { display:none; }
 .ai-chip {
   font-size:12px; font-weight:600; color:var(--p2);
   background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.28);
@@ -678,7 +705,7 @@ input[type=range]:focus { outline:none; }
 
 /* ─── AI CHAT MESSAGES ─────────────────────────────────────────────────────── */
 .ai-chat-messages {
-  max-height:220px; overflow-y:auto; display:flex; flex-direction:column;
+  max-height:280px; overflow-y:auto; display:flex; flex-direction:column;
   gap:8px; margin-bottom:14px; padding:2px 0;
   scrollbar-width:none;
 }
@@ -690,7 +717,7 @@ input[type=range]:focus { outline:none; }
   padding:9px 13px; font-size:13px; color:#fff; line-height:1.45;
 }
 .ai-msg-assistant {
-  align-self:flex-start; max-width:92%;
+  align-self:flex-start; max-width:88%;
   background:var(--s0); border:1px solid var(--border);
   border-radius:14px 14px 14px 4px;
   padding:9px 13px; font-size:13px; color:var(--dim2); line-height:1.55;
@@ -1065,7 +1092,7 @@ input[type=range] {
       </div>
 
       <!-- Empty state -->
-      <div id="plan-empty" class="empty hidden" style="padding:40px 24px">
+      <div id="plan-empty" class="empty hidden">
         <div class="empty-sub">Add debts to see your payoff strategy.</div>
         <button class="empty-btn" onclick="openAdd()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -1077,38 +1104,47 @@ input[type=range] {
 
       <!-- ③ Premium Guides -->
       <div class="sect-row">
-        <div class="sect" style="margin:0">PREMIUM GUIDES</div>
+        <div class="sect sect-inline">PREMIUM GUIDES</div>
         <div class="sect-badge">FREE WITH SESSION</div>
       </div>
 
-      <div class="card guide-card guide-locked" onclick="scrollToBooking()">
-        <div class="guide-icon">📋</div>
+      <div class="card guide-card guide-locked" onclick="openUpgradeSheet()">
+        <div class="guide-icon-wrap c-transfer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
         <div class="guide-meta">
           <div class="guide-title">Balance Transfer Playbook</div>
           <div class="guide-sub">Move high-rate debt to a 0% APR card and pay zero interest for up to 21 months.</div>
-          <div class="guide-unlock">🔒 Unlock with your free session</div>
         </div>
+        <div class="guide-lock-badge">Locked</div>
+        <div class="guide-arrow">→</div>
       </div>
 
-      <div class="card guide-card guide-locked" onclick="scrollToBooking()">
-        <div class="guide-icon">📞</div>
+      <div class="card guide-card guide-locked" onclick="openUpgradeSheet()">
+        <div class="guide-icon-wrap c-phone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        </div>
         <div class="guide-meta">
           <div class="guide-title">Rate Negotiation Script</div>
           <div class="guide-sub">Word-for-word call scripts that have lowered APRs by 5–10% for thousands of borrowers.</div>
-          <div class="guide-unlock">🔒 Unlock with your free session</div>
         </div>
+        <div class="guide-lock-badge">Locked</div>
+        <div class="guide-arrow">→</div>
       </div>
 
-      <div class="card guide-card guide-locked" onclick="scrollToBooking()">
-        <div class="guide-icon">📈</div>
+      <div class="card guide-card guide-locked" onclick="openUpgradeSheet()">
+        <div class="guide-icon-wrap c-chart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
         <div class="guide-meta">
           <div class="guide-title">Credit Score Accelerator</div>
           <div class="guide-sub">Exact steps to boost your score while paying down debt — without hurting your progress.</div>
-          <div class="guide-unlock">🔒 Unlock with your free session</div>
         </div>
+        <div class="guide-lock-badge">Locked</div>
+        <div class="guide-arrow">→</div>
       </div>
 
-      <!-- ④ Fast Wins — free content -->
+      <!-- ④ Free Tips -->
       <div class="sect">FREE TIPS</div>
       <div class="tip-strip">
         <div class="tip-item">
@@ -1999,7 +2035,7 @@ function injectPreviewToggle() {
   btn.id = 'preview-toggle';
   btn.textContent = isPremium ? 'PRO' : 'FREE';
   btn.style.cssText = [
-    'position:fixed','top:70px','right:16px','z-index:9999',
+    'position:fixed','top:110px','right:16px','z-index:9999',
     'padding:6px 12px','border-radius:20px','border:none',
     'font:700 11px/1 system-ui','letter-spacing:.05em','cursor:pointer',
     'box-shadow:0 2px 8px rgba(0,0,0,.4)',
@@ -2079,7 +2115,9 @@ function renderGuideTab() {
       <div class="ai-input-row">
         <input class="ai-input" id="ai-input" placeholder="Ask about your debts…"
           onkeydown="if(event.key==='Enter')sendAiMessage()">
-        <button class="ai-send" id="ai-send-btn" onclick="sendAiMessage()">→</button>
+        <button class="ai-send" id="ai-send-btn" onclick="sendAiMessage()" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
       <div class="ai-disclaimer">Powered by Gemini · Your exact debt data · Private</div>
       <div class="ai-divider"></div>
@@ -2096,18 +2134,16 @@ function renderGuideTab() {
       hideChips();
     }
 
-    // Unlock guide cards
+    // Unlock guide cards (CSS handles badge/arrow visibility via .guide-locked)
     guideCards.forEach(card => {
       card.classList.remove('guide-locked');
-      const lockEl = card.querySelector('.guide-unlock');
-      if (lockEl) lockEl.remove();
       card.onclick = () => showToast('Full guide coming soon!');
     });
 
     if (sectBadge) sectBadge.textContent = 'INCLUDED';
 
   } else {
-    // Free: locked guide cards open the upgrade sheet
+    // Free: lock guide cards
     guideCards.forEach(card => {
       card.classList.add('guide-locked');
       card.onclick = openUpgradeSheet;
