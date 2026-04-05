@@ -1724,30 +1724,35 @@ function renderDebts(sim) {
 
 // ─── PLAN ──────────────────────────────────────────────────────────────────
 function renderPlan(sim, simAlt) {
-  const planEmpty = document.getElementById('plan-empty');
-  const hasDebts  = S.debts.length > 0;
+  const planEmpty   = document.getElementById('plan-empty');
+  const compareBanner = document.getElementById('plan-compare');
+  const optAva      = document.getElementById('opt-avalanche');
+  const optSnow     = document.getElementById('opt-snowball');
+  const planExplain = document.getElementById('plan-explain');
+  const pOrder      = document.getElementById('p-order');
+  const hasDebts    = S.debts.length > 0;
 
-  planEmpty.classList.toggle('hidden', hasDebts);
-  document.getElementById('plan-compare').classList.toggle('hidden', !hasDebts || !sim);
+  if (planEmpty)   planEmpty.classList.toggle('hidden', hasDebts);
+  if (compareBanner) compareBanner.classList.toggle('hidden', !hasDebts || !sim);
 
   // Strategy toggle state
-  document.getElementById('opt-avalanche').classList.toggle('active', S.strategy === 'avalanche');
-  document.getElementById('opt-snowball').classList.toggle('active',  S.strategy === 'snowball');
+  if (optAva)  optAva.classList.toggle('active',  S.strategy === 'avalanche');
+  if (optSnow) optSnow.classList.toggle('active', S.strategy === 'snowball');
 
   // Strategy explanation
   const explains = {
     avalanche: '<strong>Smart Pay:</strong> Minimum payments on all debts, everything extra attacks the <strong>highest-rate debt first</strong>. Mathematically saves the most money.',
     snowball:  '<strong>Quick Wins:</strong> Minimum payments on all debts, everything extra attacks the <strong>smallest balance first</strong>. Fast wins build momentum — proven to keep people on track.',
   };
-  document.getElementById('plan-explain').innerHTML = explains[S.strategy];
+  if (planExplain) planExplain.innerHTML = explains[S.strategy];
 
   if (!hasDebts || !sim) {
-    document.getElementById('p-order').innerHTML = '';
+    if (pOrder) pOrder.innerHTML = '';
     return;
   }
 
   // Strategy comparison banner
-  const banner = document.getElementById('plan-compare');
+  const banner = compareBanner;
   if (simAlt) {
     const intDiff  = simAlt.totalInterest - sim.totalInterest;
     const monDiff  = simAlt.totalMonths   - sim.totalMonths;
@@ -1774,7 +1779,8 @@ function renderPlan(sim, simAlt) {
 
   // Payoff order list
   const order  = getPayoffOrder();
-  const ol     = document.getElementById('p-order');
+  const ol     = pOrder;
+  if (!ol) return;
   ol.innerHTML = '';
   order.forEach((id, i) => {
     const d = S.debts.find(x => x.id === id);
