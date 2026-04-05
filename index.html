@@ -1975,6 +1975,10 @@ let isPremium = false;
 function loadPremiumStatus() {
   // Production: replace with Purchases.getCustomerInfo() from RevenueCat SDK
   // The SDK call would check entitlements server-side, not just localStorage.
+  if (new URLSearchParams(location.search).get('preview') === 'premium') {
+    isPremium = true;
+    return;
+  }
   try {
     isPremium = JSON.parse(localStorage.getItem('dk_premium') || 'false');
   } catch(_) {
@@ -2031,7 +2035,7 @@ function renderGuideTab() {
 
   if (isPremium) {
     // Premium: AI chat + counseling fallback
-    aiChatHistory   = []; // reset history when tab re-renders
+    const freshSession = aiChatHistory.length === 0;
     hero.className  = 'cta-card ai-premium-card';
     hero.innerHTML  = `
       <div class="cta-eyebrow">AI DEBT ADVISOR · PRO</div>
@@ -2053,8 +2057,13 @@ function renderGuideTab() {
         <button class="counseling-link" onclick="openBookingOrToast()">Book free session →</button>
       </div>
     `;
-    // Inject greeting as first assistant message
-    appendChatMessage('assistant', getAiGreeting());
+    if (freshSession) {
+      appendChatMessage('assistant', getAiGreeting());
+    } else {
+      // Replay existing history into the freshly-rendered DOM shell
+      aiChatHistory.forEach(m => appendChatMessage(m.role, m.content));
+      hideChips();
+    }
 
     // Unlock guide cards
     guideCards.forEach(card => {
@@ -2179,6 +2188,9 @@ async function sendAiMessage(overrideText) {
 
   const typingEl = appendTypingIndicator();
 
+  const controller = new AbortController();
+  const reqTimeout = setTimeout(() => controller.abort(), 30000);
+
   try {
     const userKey = localStorage.getItem('dk_ai_key') || '';
     const headers = { 'Content-Type': 'application/json' };
@@ -2187,8 +2199,9 @@ async function sendAiMessage(overrideText) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers,
+      signal: controller.signal,
       body: JSON.stringify({
-        messages:     aiChatHistory,
+        messages:     aiChatHistory.slice(-10),
         systemPrompt: buildSystemPrompt(),
       }),
     });
@@ -2236,13 +2249,18 @@ async function sendAiMessage(overrideText) {
       }
     }
 
+    clearTimeout(reqTimeout);
+
     if (fullReply) {
       aiChatHistory.push({ role: 'assistant', content: fullReply });
     }
 
   } catch (err) {
+    clearTimeout(reqTimeout);
     typingEl?.remove();
-    appendChatMessage('assistant', 'Connection error — please try again.');
+    appendChatMessage('assistant', err.name === 'AbortError'
+      ? 'Request timed out — please try again.'
+      : 'Connection error — please try again.');
   }
 
   aiSending = false;
