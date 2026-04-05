@@ -1975,8 +1975,13 @@ let isPremium = false;
 function loadPremiumStatus() {
   // Production: replace with Purchases.getCustomerInfo() from RevenueCat SDK
   // The SDK call would check entitlements server-side, not just localStorage.
-  if (new URLSearchParams(location.search).get('preview') === 'premium') {
+  const previewParam = new URLSearchParams(location.search).get('preview');
+  if (previewParam === 'premium') {
     isPremium = true;
+    return;
+  }
+  if (previewParam === 'free') {
+    isPremium = false;
     return;
   }
   try {
@@ -1984,6 +1989,32 @@ function loadPremiumStatus() {
   } catch(_) {
     isPremium = false;
   }
+}
+
+function injectPreviewToggle() {
+  const previewParam = new URLSearchParams(location.search).get('preview');
+  if (!previewParam) return; // only show during preview sessions
+
+  const btn = document.createElement('button');
+  btn.id = 'preview-toggle';
+  btn.textContent = isPremium ? 'PRO' : 'FREE';
+  btn.style.cssText = [
+    'position:fixed','bottom:90px','right:16px','z-index:9999',
+    'padding:6px 12px','border-radius:20px','border:none',
+    'font:700 11px/1 system-ui','letter-spacing:.05em','cursor:pointer',
+    'box-shadow:0 2px 8px rgba(0,0,0,.4)',
+    'background:' + (isPremium ? '#7c5cfc' : '#444'),
+    'color:#fff',
+  ].join(';');
+
+  btn.onclick = () => {
+    const next = isPremium ? 'free' : 'premium';
+    const url  = new URL(location.href);
+    url.searchParams.set('preview', next);
+    location.href = url.toString();
+  };
+
+  document.body.appendChild(btn);
 }
 
 // ─── UPGRADE SHEET ─────────────────────────────────────────────────────────
@@ -2405,6 +2436,7 @@ load();
 loadPremiumStatus();
 render();
 renderGuideTab();
+injectPreviewToggle();
 
 // Returning users bypass splash immediately; first-timers see it
 if (S.debts.length > 0) {
