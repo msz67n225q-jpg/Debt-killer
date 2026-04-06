@@ -26,8 +26,10 @@ const VALID_ROLES = new Set(['user', 'assistant']);
 const ERROR_MSG = {
   400: 'Invalid request',
   401: 'AI key invalid or expired — check your key in Settings',
+  403: 'AI key not authorized — check your API quota or permissions',
   429: 'AI rate limit reached — try again shortly',
-  503: 'AI service unavailable',
+  500: 'AI service error — please try again in a moment',
+  503: 'AI service unavailable — please try again shortly',
 };
 
 export default async function handler(req) {
@@ -66,7 +68,13 @@ export default async function handler(req) {
   try { body = JSON.parse(raw); }
   catch { return json({ error: 'Invalid JSON body' }, 400, req); }
 
-  const { messages = [] } = body;
+  const { messages = [], context = '' } = body;
+
+  // Sanitize user-provided context (debt summary built by client).
+  // Debt names are already stripped of newlines client-side (S3 fix).
+  // Server caps length as a second layer; SYSTEM_STUB always leads.
+  const safeContext = typeof context === 'string' ? context.slice(0, 5000) : '';
+  const systemText  = SYSTEM_STUB + (safeContext ? '\n\n' + safeContext : '');
 
   // Validate and sanitize message objects
   const safeMessages = messages
@@ -93,7 +101,7 @@ export default async function handler(req) {
   }));
 
   const geminiBody = {
-    system_instruction: { parts: [{ text: SYSTEM_STUB }] },
+    system_instruction: { parts: [{ text: systemText }] },
     contents,
     generationConfig: {
       maxOutputTokens: MAX_OUT_TOKENS,
@@ -118,7 +126,7 @@ export default async function handler(req) {
   if (!geminiRes.ok) {
     const status = [400, 401, 429, 503].includes(geminiRes.status)
       ? geminiRes.status : 502;
-    return json({ error: ERROR_MSG[status] || 'AI request failed' }, status, req);
+    return json({ error: ERROR_MSG[status] || `AI request failed (${geminiRes.status})` }, status, req);
   }
 
   // Re-stream Gemini SSE as our simple { "text": "..." } SSE format
