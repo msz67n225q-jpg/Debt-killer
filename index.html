@@ -37,6 +37,8 @@
 <meta name="twitter:description" content="Beat debt. See your freedom date. Pay less interest.">
 <meta name="twitter:image"      content="https://debt-killer.vercel.app/icons/icon-512.png">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <title>ZERO — Kill Your Debt</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -1240,6 +1242,20 @@ input[type=range] {
             Clear
           </button>
         </div>
+      </div>
+
+      <!-- Export data -->
+      <div style="padding:16px 0 12px;border-bottom:1px solid var(--s2)">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">Export Data</div>
+        <div style="font-size:11px;color:var(--dim2);margin-bottom:10px;line-height:1.5">
+          Download all your debts and payoff projections as a CSV file.
+        </div>
+        <button onclick="exportData()"
+          style="width:100%;text-align:center;font-size:13px;font-weight:600;color:var(--p2);
+                 padding:11px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);
+                 border-radius:10px">
+          Download CSV
+        </button>
       </div>
 
       <div style="padding:16px 0 4px;font-size:12px;color:var(--dim2);line-height:1.7">
@@ -2499,6 +2515,62 @@ function wipeAll() {
       location.reload();
     }
   );
+}
+
+function exportData() {
+  if (!S.debts.length) {
+    showToast('No debts to export — add some first!');
+    return;
+  }
+
+  const sim   = simulate(S.debts, S.extra, S.strategy);
+  const today = new Date();
+
+  // Build a map of debt id → interest paid from the simulation's perDebt array
+  const interestById = {};
+  if (sim?.perDebt) {
+    for (const w of sim.perDebt) interestById[w.id] = w.totalInterest;
+  }
+
+  const rows = [
+    ['Name', 'Balance ($)', 'APR (%)', 'Min Payment ($)', 'Payoff Months', 'Payoff Date', 'Interest Paid ($)'],
+  ];
+
+  for (const d of S.debts) {
+    const months     = sim?.payoffMonths?.[d.id] ?? '—';
+    const payoffDate = typeof months === 'number'
+      ? new Date(today.getFullYear(), today.getMonth() + months, 1)
+          .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : '—';
+    const interest = interestById[d.id] != null ? interestById[d.id].toFixed(2) : '—';
+    rows.push([
+      `"${d.name.replace(/"/g, '""')}"`,
+      d.balance.toFixed(2),
+      d.rate.toFixed(2),
+      d.minPayment.toFixed(2),
+      months,
+      payoffDate,
+      interest,
+    ]);
+  }
+
+  rows.push([]);
+  rows.push(['"Strategy"', `"${S.strategy === 'avalanche' ? 'Smart Pay (highest rate first)' : 'Quick Wins (smallest balance first)'}"`, '', '', '', '', '']);
+  rows.push(['"Extra monthly ($)"', S.extra.toFixed(2), '', '', '', '', '']);
+  if (sim) {
+    rows.push(['"Total months to debt-free"', sim.totalMonths, '', '', '', '', '']);
+    rows.push(['"Total interest paid ($)"', sim.totalInterest.toFixed(2), '', '', '', '', '']);
+  }
+
+  const csv  = rows.map(r => r.join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `zero-debts-${today.toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Downloaded!');
 }
 
 // ─── LAUNCH ────────────────────────────────────────────────────────────────
