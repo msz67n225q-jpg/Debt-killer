@@ -2290,8 +2290,8 @@ async function sendAiMessage(overrideText) {
       headers,
       signal: controller.signal,
       body: JSON.stringify({
-        messages:     aiChatHistory.slice(-10),
-        systemPrompt: buildSystemPrompt(),
+        messages: aiChatHistory.slice(-10),
+        context:  buildSystemPrompt(),
       }),
     });
 
