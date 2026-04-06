@@ -10,7 +10,7 @@
 
 export const config = { runtime: 'edge' };
 
-const GEMINI_MODEL  = 'gemini-2.0-flash';
+const GEMINI_MODEL  = 'gemini-2.5-flash';
 const GEMINI_URL    = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse`;
 const MAX_OUT_TOKENS = 1024;
 
