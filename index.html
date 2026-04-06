@@ -39,7 +39,7 @@
 
 <title>ZERO — Kill Your Debt</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
 /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
 :root {
@@ -794,6 +794,7 @@ input[type=range]:focus { outline:none; }
   padding:8px 0; transition:border-color .2s;
 }
 .form-input:focus { outline:none; border-color:var(--p1); }
+.form-input.error { border-color:var(--red) !important; }
 .form-input::placeholder { color:var(--s2); }
 .form-input.name-field { font-size:18px; }
 
@@ -1324,7 +1325,7 @@ input[type=range] {
     <div class="form-row">
       <label class="form-label" for="f-name">DEBT NAME</label>
       <input class="form-input name-field" id="f-name" type="text"
-             placeholder="e.g. Chase Freedom Visa" autocomplete="off">
+             placeholder="e.g. Chase Freedom Visa" autocomplete="off" maxlength="60">
     </div>
 
     <div class="form-row-2">
@@ -1374,6 +1375,12 @@ let S = {
 };
 let editingId = null;
 
+// Slider debounce handles
+let _rafId = 0, _saveTid = 0;
+
+// Cached NodeLists for goTo() — populated at startup
+let _views, _navTabs;
+
 // ─── PERSISTENCE ───────────────────────────────────────────────────────────
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(_) {}
@@ -1420,8 +1427,15 @@ function load() {
  * @param {'avalanche'|'snowball'} strategy
  * @returns {{ totalMonths, payoffMonths, totalInterest, perDebt } | null}
  */
+// Memoization cache — invalidated whenever debts, strategy, or extra change
+const _simCache = new Map();
+function clearSimCache() { _simCache.clear(); }
+
 function simulate(debts, extraMonthly, strategy) {
   if (!debts.length) return null;
+  const key = extraMonthly + '|' + strategy + '|' +
+    debts.map(d => d.id + ':' + d.balance + ':' + d.rate + ':' + d.minPayment).join(',');
+  if (_simCache.has(key)) return _simCache.get(key);
 
   // Work in dollars with cent-level precision
   const work = debts.map(d => ({
@@ -1515,7 +1529,9 @@ function simulate(debts, extraMonthly, strategy) {
     if (!(w.id in payoffMonths)) payoffMonths[w.id] = MAX_MONTHS;
   }
 
-  return { totalMonths, payoffMonths, totalInterest, perDebt: validWork };
+  const result = { totalMonths, payoffMonths, totalInterest, perDebt: validWork };
+  _simCache.set(key, result);
+  return result;
 }
 
 // ─── RENDER COORDINATOR ────────────────────────────────────────────────────
@@ -1807,8 +1823,12 @@ function renderPlan(sim, simAlt) {
 function missionSlider(totalPay) {
   const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
   S.extra = Math.max(0, Math.round(totalPay - totalMin));
-  save();
-  render();
+  // Debounce localStorage write — once per drag session, not per pixel
+  clearTimeout(_saveTid);
+  _saveTid = setTimeout(save, 400);
+  // Cap renders to 60fps via requestAnimationFrame
+  cancelAnimationFrame(_rafId);
+  _rafId = requestAnimationFrame(render);
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
@@ -1854,14 +1874,22 @@ function uid() {
 
 // ─── NAVIGATION ────────────────────────────────────────────────────────────
 function goTo(viewId, btn) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  _views.forEach(v => v.classList.remove('active'));
   document.getElementById('v-' + viewId).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  _navTabs.forEach(b => b.classList.remove('active'));
   (btn || document.getElementById('nav-' + viewId)).classList.add('active');
   haptic();
 }
 
 // ─── ADD / EDIT DEBT ───────────────────────────────────────────────────────
+function clearFormErrors() {
+  ['f-name','f-bal','f-rate','f-min'].forEach(id => {
+    document.getElementById(id)?.classList.remove('error');
+  });
+  const errEl = document.getElementById('f-error');
+  if (errEl) { errEl.classList.remove('show'); errEl.textContent = ''; }
+}
+
 function openAdd() {
   editingId = null;
   document.getElementById('modal-title').textContent = 'Add Debt';
@@ -1869,8 +1897,7 @@ function openAdd() {
   document.getElementById('f-bal').value   = '';
   document.getElementById('f-rate').value  = '';
   document.getElementById('f-min').value   = '';
-  document.getElementById('f-error').classList.remove('show');
-  document.getElementById('f-error').textContent = '';
+  clearFormErrors();
   document.getElementById('quick-types').style.display = '';
   document.getElementById('debt-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 350);
@@ -1885,7 +1912,7 @@ function openEdit(id) {
   document.getElementById('f-bal').value   = d.balance;
   document.getElementById('f-rate').value  = d.rate;
   document.getElementById('f-min').value   = d.minPayment;
-  document.getElementById('f-error').classList.remove('show');
+  clearFormErrors();
   document.getElementById('quick-types').style.display = 'none';
   document.getElementById('debt-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 350);
@@ -1907,25 +1934,25 @@ function saveDebt() {
   const rate = parseFloat(document.getElementById('f-rate').value);
   const min  = parseFloat(document.getElementById('f-min').value);
 
-  const errEl = document.getElementById('f-error');
-  errEl.classList.remove('show');
+  clearFormErrors();
 
-  // Validation
-  const bad = !name
-    ? 'Please enter a debt name.'
-    : (!Number.isFinite(bal) || bal <= 0)
-      ? 'Enter a valid balance greater than $0.'
-      : (!Number.isFinite(rate) || rate < 0 || rate > 100)
-        ? 'Enter a valid APR between 0% and 100%.'
-        : (!Number.isFinite(min) || min <= 0)
-          ? 'Enter a valid minimum payment.'
-          : (min <= bal * rate / 100 / 12 && rate > 0)
-            ? `Min payment must exceed monthly interest ($${Math.ceil(bal * rate / 100 / 12) + 1}/mo required).`
-            : null;
+  // Validation — determine error message AND which field to highlight
+  let bad = null, badField = null;
+  if (!name)                                        { bad = 'Please enter a debt name.';                     badField = 'f-name'; }
+  else if (name.length > 60)                        { bad = 'Debt name must be 60 characters or fewer.';     badField = 'f-name'; }
+  else if (!Number.isFinite(bal) || bal <= 0)       { bad = 'Enter a valid balance greater than $0.';        badField = 'f-bal';  }
+  else if (!Number.isFinite(rate) || rate < 0 || rate > 100) { bad = 'Enter a valid APR between 0% and 100%.'; badField = 'f-rate'; }
+  else if (!Number.isFinite(min) || min <= 0)       { bad = 'Enter a valid minimum payment.';               badField = 'f-min';  }
+  else if (min <= bal * rate / 100 / 12 && rate > 0) {
+    bad = `Min payment must exceed monthly interest ($${Math.ceil(bal * rate / 100 / 12) + 1}/mo required).`;
+    badField = 'f-min';
+  }
 
   if (bad) {
+    const errEl = document.getElementById('f-error');
     errEl.textContent = bad;
     errEl.classList.add('show');
+    if (badField) document.getElementById(badField)?.classList.add('error');
     return;
   }
 
@@ -1939,7 +1966,9 @@ function saveDebt() {
     const colorIdx = S.debts.length % COLORS.length;
     S.debts.push({ id: uid(), name, balance: bal, rate, minPayment: min, colorIdx });
     haptic();
+    clearSimCache();
     save();
+    showToast('Debt saved!');
     document.getElementById('debt-overlay').classList.remove('open');
     render();
     if (isFirst) goTo('mission', document.getElementById('nav-mission'));
@@ -1947,7 +1976,9 @@ function saveDebt() {
   }
 
   haptic();
+  clearSimCache();
   save();
+  showToast('Debt saved!');
   document.getElementById('debt-overlay').classList.remove('open');
   render();
 }
@@ -1970,6 +2001,7 @@ function deleteDebt(id) {
       } else {
         S.extra = 0;
       }
+      clearSimCache();
       save();
       render();
     }
@@ -1979,6 +2011,7 @@ function deleteDebt(id) {
 // ─── STRATEGY / EXTRA ──────────────────────────────────────────────────────
 function setStrategy(s) {
   S.strategy = s;
+  clearSimCache();
   save();
   render();
 }
@@ -2001,15 +2034,10 @@ let isPremium = false;
 function loadPremiumStatus() {
   // Production: replace with Purchases.getCustomerInfo() from RevenueCat SDK
   // The SDK call would check entitlements server-side, not just localStorage.
-  const previewParam = new URLSearchParams(location.search).get('preview');
-  if (previewParam === 'premium') {
-    isPremium = true;
-    return;
-  }
-  if (previewParam === 'free') {
-    isPremium = false;
-    return;
-  }
+  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const previewParam = isDev ? new URLSearchParams(location.search).get('preview') : null;
+  if (previewParam === 'premium') { isPremium = true;  return; }
+  if (previewParam === 'free')    { isPremium = false; return; }
   try {
     isPremium = JSON.parse(localStorage.getItem('dk_premium') || 'false');
   } catch(_) {
@@ -2018,8 +2046,10 @@ function loadPremiumStatus() {
 }
 
 function injectPreviewToggle() {
+  const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (!isDev) return; // preview toggle only available in local development
   const previewParam = new URLSearchParams(location.search).get('preview');
-  if (!previewParam) return; // only show during preview sessions
+  if (!previewParam) return;
 
   const btn = document.createElement('button');
   btn.id = 'preview-toggle';
@@ -2152,10 +2182,12 @@ function buildSystemPrompt() {
   const monthlyInterest = S.debts.reduce((s, d) => s + d.balance * (d.rate / 100 / 12), 0);
 
   const debtList = S.debts.length
-    ? S.debts.map(d =>
-        `• ${d.name}: ${fmtDollar(d.balance)} at ${d.rate}% APR, ` +
-        `${fmtDollar(d.minPayment)}/mo minimum`
-      ).join('\n')
+    ? S.debts.map(d => {
+        // Strip injection vectors: newlines, tabs; limit name length
+        const safeName = d.name.replace(/[\r\n\t]+/g, ' ').slice(0, 60);
+        return `• ${safeName}: ${fmtDollar(d.balance)} at ${d.rate}% APR, ` +
+               `${fmtDollar(d.minPayment)}/mo minimum`;
+      }).join('\n')
     : 'No debts entered yet.';
 
   return `You are a debt payoff advisor inside the ZERO app. Be concise (2–4 sentences), specific, and actionable. Mobile-friendly responses only.
@@ -2458,6 +2490,8 @@ document.addEventListener('keydown', e => {
   }
 }());
 
+_views   = document.querySelectorAll('.view');
+_navTabs = document.querySelectorAll('.nav-tab');
 load();
 loadPremiumStatus();
 render();
