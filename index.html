@@ -680,6 +680,7 @@ input[type=range]:focus { outline:none; }
 .ai-chips {
   display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto;
   scrollbar-width:none; margin-bottom:14px; padding-bottom:2px;
+  -webkit-overflow-scrolling:touch;
 }
 .ai-chips::-webkit-scrollbar { display:none; }
 .ai-chip {
@@ -693,12 +694,12 @@ input[type=range]:focus { outline:none; }
 .ai-input {
   flex:1; background:var(--s0); border:1px solid var(--border);
   border-radius:12px; padding:12px 14px;
-  font-size:14px; color:#fff; font-family:inherit;
+  font-size:16px; color:#fff; font-family:inherit;
 }
 .ai-input::placeholder { color:var(--dim); }
 .ai-input:focus { outline:none; border-color:rgba(168,85,247,.6); }
 .ai-send {
-  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  width:48px; height:48px; min-width:48px; min-height:48px; border-radius:12px; flex-shrink:0;
   background:linear-gradient(135deg,var(--p1),var(--p2));
   color:#fff; font-size:18px; font-weight:700;
   display:flex; align-items:center; justify-content:center;
@@ -711,9 +712,9 @@ input[type=range]:focus { outline:none; }
 
 /* ─── AI CHAT MESSAGES ─────────────────────────────────────────────────────── */
 .ai-chat-messages {
-  max-height:280px; overflow-y:auto; display:flex; flex-direction:column;
+  min-height:160px; max-height:min(320px,40vh); overflow-y:auto; display:flex; flex-direction:column;
   gap:8px; margin-bottom:14px; padding:2px 0;
-  scrollbar-width:none;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
 }
 .ai-chat-messages::-webkit-scrollbar { display:none; }
 .ai-msg-user {
@@ -1228,6 +1229,11 @@ input[type=range] {
             style="flex:1;background:var(--s0);border:1px solid var(--border);border-radius:10px;
                    padding:10px 12px;font-size:13px;color:#fff;font-family:inherit"
             oninput="saveAiKey(this.value)">
+          <button id="test-ai-key-btn" onclick="testAiKey()"
+            style="font-size:12px;color:var(--p2);padding:10px 12px;
+                   background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:10px;white-space:nowrap">
+            Test
+          </button>
           <button onclick="clearAiKey()"
             style="font-size:12px;color:var(--dim);padding:10px 12px;
                    background:var(--s0);border:1px solid var(--border);border-radius:10px">
@@ -2220,11 +2226,24 @@ function getAiGreeting() {
   return `Hi! I can see ${S.debts.length} ${debtWord} totaling ${fmtDollar(totalDebt)} — you're paying ${fmtDollar(monthlyInt)}/mo in interest. At this pace you'll be debt-free in ${timeStr}. What would you like to work on?`;
 }
 
+/** Safe inline markdown: escape HTML, then apply bold + line breaks only */
+function renderMarkdown(text) {
+  if (!text) return '';
+  const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return safe
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
 /** Append a message bubble to #ai-messages. Returns the element. */
 function appendChatMessage(role, text) {
   const el = document.createElement('div');
   el.className = role === 'user' ? 'ai-msg-user' : 'ai-msg-assistant';
-  el.textContent = text;
+  if (role === 'assistant') {
+    el.innerHTML = renderMarkdown(text);
+  } else {
+    el.textContent = text;
+  }
   const container = document.getElementById('ai-messages');
   if (container) {
     container.appendChild(el);
@@ -2331,6 +2350,7 @@ async function sendAiMessage(overrideText) {
           const { text } = JSON.parse(data);
           if (text) {
             fullReply += text;
+            // Plain text during streaming to avoid flicker on partial markdown
             msgEl.textContent = fullReply;
             scrollChatToBottom();
           }
@@ -2340,7 +2360,9 @@ async function sendAiMessage(overrideText) {
 
     clearTimeout(reqTimeout);
 
+    // Apply markdown formatting now that the full reply is assembled
     if (fullReply) {
+      msgEl.innerHTML = renderMarkdown(fullReply);
       aiChatHistory.push({ role: 'assistant', content: fullReply });
     }
 
@@ -2434,6 +2456,31 @@ function clearAiKey() {
   const input = document.getElementById('settings-ai-key');
   if (input) input.value = '';
   showToast('API key cleared');
+}
+
+async function testAiKey() {
+  const btn = document.getElementById('test-ai-key-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Testing…'; }
+  try {
+    const userKey = localStorage.getItem(AI_KEY_STORE) || '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (userKey) headers['X-User-Api-Key'] = userKey;
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }], context: '' }),
+    });
+    if (res.ok) {
+      try { await res.body?.cancel(); } catch(_) {}
+      showToast('Key works!');
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      showToast(errData.error || `Test failed (${res.status})`);
+    }
+  } catch {
+    showToast('Connection error — check your network');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Test'; }
 }
 
 function closeSettings(e) {

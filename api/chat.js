@@ -10,9 +10,9 @@
 
 export const config = { runtime: 'edge' };
 
-const GEMINI_MODEL  = 'gemini-1.5-flash';
+const GEMINI_MODEL  = 'gemini-2.0-flash';
 const GEMINI_URL    = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse`;
-const MAX_OUT_TOKENS = 512;
+const MAX_OUT_TOKENS = 1024;
 
 // Server-side system instruction — clients cannot override this
 const SYSTEM_STUB = 'You are a helpful debt payoff advisor. Be concise (2–4 sentences), specific, and actionable. Mobile-friendly responses only.';
@@ -27,6 +27,7 @@ const ERROR_MSG = {
   400: 'Invalid request',
   401: 'AI key invalid or expired — check your key in Settings',
   403: 'AI key not authorized — check your API quota or permissions',
+  404: 'AI model not found — service may be updating, try again shortly',
   429: 'AI rate limit reached — try again shortly',
   500: 'AI service error — please try again in a moment',
   503: 'AI service unavailable — please try again shortly',
@@ -85,7 +86,8 @@ export default async function handler(req) {
     )
     .map(m => ({
       role:    m.role,
-      content: String(m.content).slice(0, 4000),
+      // Strip null bytes and other control chars (keep \n and \t for readability)
+      content: String(m.content).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').slice(0, 4000),
     }));
 
   if (!safeMessages.length) {
@@ -124,9 +126,10 @@ export default async function handler(req) {
   }
 
   if (!geminiRes.ok) {
-    const status = [400, 401, 429, 503].includes(geminiRes.status)
-      ? geminiRes.status : 502;
-    return json({ error: ERROR_MSG[status] || `AI request failed (${geminiRes.status})` }, status, req);
+    const gs = geminiRes.status;
+    // Use Gemini's actual status for the error message, but cap exotic codes to 502 for the HTTP response
+    const clientStatus = [400, 401, 403, 404, 429, 500, 503].includes(gs) ? gs : 502;
+    return json({ error: ERROR_MSG[gs] || `AI request failed (${gs})` }, clientStatus, req);
   }
 
   // Re-stream Gemini SSE as our simple { "text": "..." } SSE format
