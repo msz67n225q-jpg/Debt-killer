@@ -1,14 +1,24 @@
 // ZERO — Service Worker
 // Cache-first for app shell; network-first for everything else.
 
-const CACHE = 'zero-v3';
+const CACHE = 'zero-v4';
 const SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/icon-1024.png',
   '/icons/apple-touch-icon.png',
+  '/icons/splash-750x1334.png',
+  '/icons/splash-828x1792.png',
+  '/icons/splash-1080x2340.png',
+  '/icons/splash-1125x2436.png',
+  '/icons/splash-1170x2532.png',
+  '/icons/splash-1179x2556.png',
+  '/icons/splash-1242x2688.png',
+  '/icons/splash-1284x2778.png',
+  '/icons/splash-1290x2796.png',
 ];
 
 // ── Install: pre-cache the app shell ───────────────────────────────────────
