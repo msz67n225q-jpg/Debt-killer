@@ -998,6 +998,17 @@ input[type=range] {
           </div>
         </div>
 
+        <!-- Share milestone -->
+        <div style="text-align:center;margin:4px 0 12px">
+          <button onclick="sharePayoffPlan()"
+            style="font-size:12px;font-weight:600;color:var(--p2);padding:8px 20px;
+                   background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);
+                   border-radius:100px;letter-spacing:.3px"
+            aria-label="Share my payoff plan">
+            Share my plan ↗
+          </button>
+        </div>
+
         <!-- ★ INTERACTIVE payment slider — the core of the app ★ -->
         <div class="pay-card">
           <div class="pay-row">
@@ -2432,6 +2443,30 @@ function openBookingOrToast() {
     window.open(BOOKING_URL, '_blank', 'noopener,noreferrer');
   } else {
     showToast('Booking coming soon — check back shortly!');
+  }
+}
+
+// ─── SHARE ─────────────────────────────────────────────────────────────────
+async function sharePayoffPlan() {
+  const sim       = simulate(S.debts, S.extra, S.strategy);
+  const totalDebt = S.debts.reduce((s, d) => s + d.balance, 0);
+  if (!sim || !totalDebt) { showToast('Add debts first to share your plan'); return; }
+
+  const months = sim.totalMonths;
+  const yrs    = (months / 12).toFixed(1);
+  const text   = `I'm using ZERO to eliminate ${fmtDollar(totalDebt)} of debt. ` +
+                 `At this pace I'll be debt-free in ${months} months (${yrs} yrs) ` +
+                 `and save ${fmtDollar(sim.totalInterest)} in interest. 🎯`;
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'My Debt Payoff Plan — ZERO', text, url: 'https://debt-killer.vercel.app' });
+    } else {
+      await navigator.clipboard?.writeText(text + '\nhttps://debt-killer.vercel.app');
+      showToast('Copied to clipboard!');
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Could not share — try again');
   }
 }
 
