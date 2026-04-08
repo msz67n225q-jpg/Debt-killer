@@ -1,10 +1,11 @@
 // ZERO — Service Worker
 // Cache-first for app shell; network-first for everything else.
 
-const CACHE = 'zero-v4';
+const CACHE = 'zero-v5';
 const SHELL = [
   '/',
   '/index.html',
+  '/offline.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -69,7 +70,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => caches.match('/offline.html') ?? caches.match('/index.html'));
     })
   );
 });

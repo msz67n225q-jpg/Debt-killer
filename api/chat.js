@@ -74,7 +74,9 @@ export default async function handler(req) {
   // Sanitize user-provided context (debt summary built by client).
   // Debt names are already stripped of newlines client-side (S3 fix).
   // Server caps length as a second layer; SYSTEM_STUB always leads.
-  const safeContext = typeof context === 'string' ? context.slice(0, 5000) : '';
+  const safeContext = typeof context === 'string'
+    ? context.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').slice(0, 5000)
+    : '';
   const systemText  = SYSTEM_STUB + (safeContext ? '\n\n' + safeContext : '');
 
   // Validate and sanitize message objects

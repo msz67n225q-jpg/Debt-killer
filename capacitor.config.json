@@ -5,7 +5,7 @@
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "hostname": "zerodebt.app"
+    "hostname": "debt-killer.vercel.app"
   },
   "plugins": {
     "SplashScreen": {

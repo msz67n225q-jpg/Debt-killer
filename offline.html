@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>ZERO — Offline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      background: #000; color: #fff;
+      min-height: 100dvh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px;
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
+    }
+    .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 32px; }
+    .icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(168,85,247,.15); border: 1px solid rgba(168,85,247,.3);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px; font-size: 28px;
+    }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    p  { font-size: 14px; color: #9ca3af; text-align: center; max-width: 280px; line-height: 1.6; margin-bottom: 32px; }
+    button {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff; font-size: 15px; font-weight: 700;
+      border-radius: 14px; padding: 14px 32px;
+      letter-spacing: .3px;
+    }
+    button:active { opacity: .85; transform: scale(.97); }
+  </style>
+</head>
+<body>
+  <div class="logo">ZERO</div>
+  <div class="icon">📡</div>
+  <h1>You're offline</h1>
+  <p>Check your connection and try again. Your debt data is safe on your device.</p>
+  <button onclick="location.reload()">Try Again</button>
+</body>
+</html>
