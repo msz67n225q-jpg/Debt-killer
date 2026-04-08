@@ -490,7 +490,7 @@ input[type=range]:focus { outline:none; }
   font-size:11px; font-weight:800; color:#000; flex-shrink:0;
 }
 .po-meta { flex:1; }
-.po-name { font-size:13px; font-weight:700; }
+.po-name { font-size:13px; font-weight:700; overflow-wrap:break-word; word-break:break-word; }
 .po-rate { font-size:11px; color:var(--dim2); }
 .po-date { font-size:13px; font-weight:700; color:var(--p2); }
 
@@ -1452,16 +1452,19 @@ function load() {
     const p = JSON.parse(raw);
     if (Array.isArray(p.debts)) {
       S.debts = p.debts.filter(d =>
-        d.id && d.name &&
+        d.id && typeof d.id === 'string' &&
+        d.name && typeof d.name === 'string' &&
         +d.balance > 0 && +d.rate >= 0 && +d.minPayment > 0
       ).map(d => ({
-        id: d.id,
-        name: d.name,
+        // Sanitize id: only allow safe identifier chars (UUID format)
+        id: String(d.id).replace(/[^a-zA-Z0-9\-_]/g, '').slice(0, 64),
+        // Strip control chars from name; re-enforce 60-char limit
+        name: String(d.name).replace(/[\x00-\x1F\x7F]/g, '').slice(0, 60),
         balance: +d.balance,
         rate: +d.rate,
         minPayment: +d.minPayment,
-        colorIdx: d.colorIdx ?? 0,
-      }));
+        colorIdx: typeof d.colorIdx === 'number' ? d.colorIdx : 0,
+      })).filter(d => d.id && d.name); // drop any that became empty after sanitization
     }
     if (p.strategy === 'snowball') S.strategy = 'snowball';
     if (typeof p.extra === 'number' && p.extra >= 0) S.extra = p.extra;
@@ -1609,6 +1612,34 @@ function renderMission(sim) {
   const empty   = document.getElementById('mission-empty');
   const data    = document.getElementById('mission-data');
   const hasData = S.debts.length > 0 && sim;
+
+  // Debts exist but sim is null → at least one debt is unpayable (min ≤ interest)
+  if (S.debts.length > 0 && !sim) {
+    const blocked = S.debts.filter(d => d.rate > 0 && d.minPayment <= d.balance * d.rate / 100 / 12);
+    const titleEl = empty.querySelector('.empty-title');
+    const subEl   = empty.querySelector('.empty-sub');
+    const btnEl   = empty.querySelector('.empty-btn');
+    if (titleEl) titleEl.textContent = 'Payment too low';
+    if (subEl) {
+      const names = blocked.map(d => `"${d.name}"`).join(', ');
+      const needed = blocked.map(d => '$' + (Math.ceil(d.balance * d.rate / 100 / 12) + 1)).join(', ');
+      subEl.innerHTML = `${names} — minimum payment doesn't cover monthly interest.<br>Increase to at least ${needed}/mo to generate a plan.`;
+    }
+    if (btnEl) { btnEl.onclick = () => openEdit(blocked[0]?.id); btnEl.childNodes[btnEl.childNodes.length - 1].textContent = ' FIX PAYMENT'; }
+    empty.classList.remove('hidden');
+    data.classList.add('hidden');
+    return;
+  }
+
+  // Restore default empty-state text in case it was overwritten above
+  const titleEl = empty.querySelector('.empty-title');
+  const subEl   = empty.querySelector('.empty-sub');
+  const btnEl   = empty.querySelector('.empty-btn');
+  if (titleEl && titleEl.textContent !== 'No debts tracked yet') {
+    titleEl.textContent = 'No debts tracked yet';
+    if (subEl) subEl.innerHTML = 'Add your debts and we\'ll build<br>your personalized freedom plan.';
+    if (btnEl) { btnEl.onclick = openAdd; btnEl.childNodes[btnEl.childNodes.length - 1].textContent = ' ADD FIRST DEBT'; }
+  }
 
   empty.classList.toggle('hidden', hasData);
   data.classList.toggle('hidden', !hasData);
@@ -1776,13 +1807,13 @@ function renderDebts(sim) {
       <div class="debt-card-footer">
         <div class="debt-card-min">Min ${fmtDollar(d.minPayment)}/mo</div>
         <div class="debt-card-actions">
-          <button class="debt-action-btn" onclick="openEdit('${d.id}')" aria-label="Edit ${d.name}">
+          <button class="debt-action-btn" onclick="openEdit('${d.id}')" aria-label="Edit ${esc(d.name)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-          <button class="debt-action-btn del" onclick="deleteDebt('${d.id}')" aria-label="Delete ${d.name}">
+          <button class="debt-action-btn del" onclick="deleteDebt('${d.id}')" aria-label="Delete ${esc(d.name)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -2019,11 +2050,19 @@ function saveDebt() {
     const idx = S.debts.findIndex(d => d.id === editingId);
     if (idx !== -1) {
       S.debts[idx] = { ...S.debts[idx], name, balance: bal, rate, minPayment: min };
+      if (aiChatHistory.length) aiContextDirty = true;
     }
   } else {
+    if (S.debts.length >= 25) {
+      const errEl = document.getElementById('f-error');
+      errEl.textContent = 'Maximum 25 debts reached. Remove one before adding another.';
+      errEl.classList.add('show');
+      return;
+    }
     const isFirst = S.debts.length === 0;
     const colorIdx = S.debts.length % COLORS.length;
     S.debts.push({ id: uid(), name, balance: bal, rate, minPayment: min, colorIdx });
+    if (aiChatHistory.length) aiContextDirty = true;
     haptic();
     clearSimCache();
     save();
@@ -2051,6 +2090,7 @@ function deleteDebt(id) {
     'REMOVE', 'danger',
     () => {
       haptic('medium');
+      if (aiChatHistory.length) aiContextDirty = true;
       S.debts = S.debts.filter(x => x.id !== id);
       // Cap extra so slider stays within valid range after deletion
       if (S.debts.length) {
@@ -2231,8 +2271,9 @@ function renderGuideTab() {
 }
 
 // ─── AI ADVISOR ────────────────────────────────────────────────────────────
-let aiChatHistory = [];   // session-only message history [{role, content}]
-let aiSending     = false; // guard against double-sends
+let aiChatHistory  = [];   // session-only message history [{role, content}]
+let aiSending      = false; // guard against double-sends
+let aiContextDirty = false; // true when debts changed since last AI exchange
 
 /** Build a concise system prompt from the user's current debt data */
 function buildSystemPrompt() {
@@ -2357,12 +2398,24 @@ async function sendAiMessage(overrideText) {
     const headers = { 'Content-Type': 'application/json' };
     if (userKey) headers['X-User-Api-Key'] = userKey;
 
+    // If debts changed since last message, inject a note so the AI discards
+    // stale references from conversation history and trusts the current context.
+    let historyToSend = aiChatHistory.slice(-10);
+    if (aiContextDirty && historyToSend.length) {
+      historyToSend = [
+        { role: 'user', content: '[System note: debt profile updated — use the current data above, disregard prior balances/rates]' },
+        { role: 'assistant', content: 'Understood, I\'ll use your updated debt profile.' },
+        ...historyToSend,
+      ];
+      aiContextDirty = false;
+    }
+
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers,
       signal: controller.signal,
       body: JSON.stringify({
-        messages: aiChatHistory.slice(-10),
+        messages: historyToSend,
         context:  buildSystemPrompt(),
       }),
     });
