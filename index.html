@@ -926,12 +926,130 @@ body.offline-active { padding-top:36px; }
 }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-/* ─── CONFIRM DANGER BUTTON ─────────────────────────────────────────────── */
+/* ─── CONFIRM BUTTONS ───────────────────────────────────────────────────── */
 .btn-danger {
   background:var(--red) !important;
   box-shadow:0 0 24px rgba(239,68,68,.3) !important;
 }
 .btn-danger:hover { box-shadow:0 0 36px rgba(239,68,68,.5) !important; }
+.btn-success {
+  background:linear-gradient(135deg,#10b981,#059669) !important;
+  box-shadow:0 0 24px rgba(16,185,129,.3) !important;
+}
+
+/* ─── DEBT CARD PAID-OFF BUTTON ─────────────────────────────────────────── */
+.debt-action-btn.paid { color:#10b981; }
+.debt-action-btn.paid:hover { background:rgba(16,185,129,.12); }
+
+/* ─── CADENCE TOGGLE ────────────────────────────────────────────────────── */
+.cadence-row {
+  display:flex; gap:0; margin-top:12px; border:1px solid var(--border);
+  border-radius:10px; overflow:hidden; width:fit-content;
+}
+.cadence-btn {
+  padding:6px 16px; font-size:12px; font-weight:700; letter-spacing:.3px;
+  color:var(--dim2); transition:background .15s, color .15s;
+}
+.cadence-btn.active { background:var(--s2); color:var(--text); }
+.biweekly-note {
+  font-size:11px; color:var(--p2); margin-top:6px; letter-spacing:.2px;
+}
+
+/* ─── WINDFALL ROW ──────────────────────────────────────────────────────── */
+.windfall-row {
+  display:flex; align-items:center; gap:10px;
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:14px; padding:10px 14px; margin-bottom:6px;
+}
+.windfall-label { font-size:12px; font-weight:700; color:var(--dim2); white-space:nowrap; }
+.windfall-input {
+  flex:1; background:transparent; border:none; outline:none;
+  font-size:15px; font-weight:700; color:var(--text); min-width:0;
+}
+.windfall-clear {
+  font-size:13px; color:var(--dim2); padding:2px 6px;
+}
+.windfall-result {
+  font-size:13px; color:var(--dim2); text-align:center;
+  padding:8px 0 4px; line-height:1.5;
+}
+.wf-gain { color:#10b981; }
+.wf-gain strong { color:#6ee7b7; }
+
+/* ─── GOAL DATE PANEL ───────────────────────────────────────────────────── */
+.goal-panel {
+  background:rgba(99,102,241,.07); border:1px solid rgba(99,102,241,.2);
+  border-radius:16px; padding:16px; margin-bottom:12px; text-align:center;
+}
+.goal-panel-label {
+  font-size:9px; font-weight:800; letter-spacing:2px; color:var(--p1);
+  margin-bottom:10px;
+}
+.goal-selects-row {
+  display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:10px;
+}
+.goal-select {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:10px; padding:8px 12px; font-size:14px; font-weight:700;
+  color:var(--text); flex:1; max-width:130px;
+}
+.goal-cancel-btn {
+  font-size:14px; color:var(--dim2); padding:6px 10px;
+}
+.goal-result { font-size:14px; color:var(--dim2); line-height:1.5; }
+.goal-result strong { color:var(--text); }
+.goal-impossible { color:var(--red); }
+.goal-toggle-btn {
+  font-size:12px; font-weight:600; color:var(--p2);
+  padding:6px 16px; background:rgba(168,85,247,.08);
+  border:1px solid rgba(168,85,247,.2); border-radius:100px;
+  margin-bottom:8px;
+}
+
+/* ─── CELEBRATION OVERLAY ───────────────────────────────────────────────── */
+.celebrate-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.92);
+  z-index:2000; display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .3s;
+}
+.celebrate-overlay.show { opacity:1; pointer-events:auto; }
+.confetti-container { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.confetti-piece {
+  position:absolute; top:-10px; left:var(--x);
+  border-radius:2px;
+  animation:confetti-fall var(--dur,1s) var(--delay,0s) ease-in forwards;
+}
+@keyframes confetti-fall {
+  0%   { transform:translateY(0) rotate(0deg); opacity:1; }
+  100% { transform:translateY(105vh) rotate(var(--rot,360deg)); opacity:.3; }
+}
+.celebrate-card {
+  position:relative; z-index:1; text-align:center; padding:32px 28px;
+  background:var(--s0); border:1px solid var(--border2);
+  border-radius:28px; max-width:320px; width:90%;
+  animation:celebrate-pop .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes celebrate-pop {
+  from { transform:scale(.7); opacity:0; }
+  to   { transform:scale(1);  opacity:1; }
+}
+.celebrate-icon { font-size:52px; margin-bottom:12px; }
+.celebrate-name {
+  font-size:22px; font-weight:900; letter-spacing:-.5px; margin-bottom:6px;
+  background:linear-gradient(135deg,#fff,#c4b5fd); -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; background-clip:text;
+}
+.celebrate-badge {
+  display:inline-block; padding:4px 14px; border-radius:100px;
+  background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.3);
+  font-size:12px; font-weight:700; color:#6ee7b7; margin-bottom:24px;
+}
+.celebrate-btn {
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  color:#fff; font-size:15px; font-weight:800;
+  border-radius:14px; padding:14px 32px; letter-spacing:.3px;
+}
+.celebrate-btn:active { opacity:.85; transform:scale(.97); }
 
 /* ─── SLIDER TRACK FILL ─────────────────────────────────────────────────── */
 input[type=range] {
@@ -1041,7 +1159,7 @@ input[type=range] {
             <circle class="ring-fill"  cx="120" cy="120" r="100" id="ring-circle"/>
           </svg>
           <div class="ring-content">
-            <div class="freedom-label">DEBT FREE</div>
+            <div class="freedom-label" id="m-freedom-label">DEBT FREE</div>
             <div class="freedom-date" id="m-date">—</div>
             <div class="freedom-sub"  id="m-sub">—</div>
             <div class="ring-eff"     id="m-eff"></div>
@@ -1066,10 +1184,21 @@ input[type=range] {
           </button>
         </div>
 
+        <!-- Goal date panel (shown when goalMode is on) -->
+        <div id="goal-panel" class="goal-panel hidden">
+          <div class="goal-panel-label">I WANT TO BE DEBT-FREE BY</div>
+          <div class="goal-selects-row">
+            <select id="goal-month" class="goal-select" onchange="render()"></select>
+            <select id="goal-year"  class="goal-select" onchange="render()"></select>
+            <button class="goal-cancel-btn" onclick="setGoalMode(false)">✕</button>
+          </div>
+          <div id="goal-result" class="goal-result"></div>
+        </div>
+
         <!-- ★ INTERACTIVE payment slider — the core of the app ★ -->
         <div class="pay-card">
           <div class="pay-row">
-            <span class="pay-label">MONTHLY PAYMENT</span>
+            <span class="pay-label" id="m-pay-label">MONTHLY PAYMENT</span>
             <span class="pay-amount" id="m-pay-amount">$0</span>
           </div>
           <input type="range" id="m-slider"
@@ -1080,6 +1209,12 @@ input[type=range] {
             <span id="m-slider-min-lbl">Min $0</span>
             <span id="m-slider-max-lbl">$2,000</span>
           </div>
+          <!-- Bi-weekly cadence toggle -->
+          <div class="cadence-row">
+            <button id="cadence-monthly"  class="cadence-btn active" onclick="setBiweekly(false)">Monthly</button>
+            <button id="cadence-biweekly" class="cadence-btn"        onclick="setBiweekly(true)">Bi-weekly</button>
+          </div>
+          <div id="m-biweekly-note" class="biweekly-note hidden"></div>
         </div>
 
         <!-- Savings vs minimum payments — both start $0 / 0mo and fill as you drag -->
@@ -1094,6 +1229,27 @@ input[type=range] {
             <div class="val" id="m-time-saved" aria-live="polite">0 mo</div>
             <div class="sub">vs minimum only</div>
           </div>
+        </div>
+
+        <!-- Windfall simulator -->
+        <div class="windfall-row">
+          <span class="windfall-label">💸 Windfall</span>
+          <input type="number" id="windfall-input" class="windfall-input"
+                 inputmode="numeric" placeholder="$0" min="0"
+                 oninput="applyWindfall(+this.value)"
+                 aria-label="One-time lump sum payment">
+          <button id="windfall-clear" class="windfall-clear hidden" onclick="clearWindfall()" aria-label="Clear windfall">✕</button>
+        </div>
+        <div id="windfall-result" class="windfall-result hidden"></div>
+
+        <!-- Goal date toggle -->
+        <div style="text-align:center;margin:4px 0 0">
+          <button id="goal-toggle-btn" onclick="setGoalMode(true)"
+            class="goal-toggle-btn"
+            style="display:none"
+            aria-label="Set a target payoff date">
+            Set goal date →
+          </button>
         </div>
 
         <!-- Totals -->
@@ -1489,8 +1645,13 @@ let S = {
   debts: [],         // { id, name, balance, rate, minPayment, colorIdx }
   strategy: 'avalanche',
   extra: 0,
+  biweekly: false,   // bi-weekly payment cadence
 };
 let editingId = null;
+
+// Session-only (not persisted)
+let windfall = 0;      // one-time lump sum
+let goalMode  = false; // reverse-simulation: "how much do I need to hit a date?"
 
 // Slider debounce handles
 let _rafId = 0, _saveTid = 0;
@@ -1537,6 +1698,7 @@ function load() {
     }
     if (p.strategy === 'snowball') S.strategy = 'snowball';
     if (typeof p.extra === 'number' && p.extra >= 0) S.extra = p.extra;
+    if (p.biweekly === true) S.biweekly = true;
   } catch(_) {}
 }
 
@@ -1667,17 +1829,27 @@ function simulate(debts, extraMonthly, strategy) {
 
 // ─── RENDER COORDINATOR ────────────────────────────────────────────────────
 function render() {
-  const sim    = simulate(S.debts, S.extra, S.strategy);
-  const simAlt = simulate(S.debts, S.extra,
+  const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
+
+  // Bi-weekly: paying half the amount every 2 weeks = 13 full payments/yr
+  const effectiveExtra = S.biweekly && totalMin > 0
+    ? Math.max(0, Math.round((S.extra + totalMin) * 13 / 12 - totalMin))
+    : S.extra;
+
+  // Windfall: pre-reduce top-priority debt balance for scenario simulation
+  const wfDebts  = windfall > 0 ? debtsWithWindfall(S.debts, S.strategy, windfall) : S.debts;
+  const sim      = simulate(wfDebts,  effectiveExtra, S.strategy);
+  const simBase  = windfall > 0 ? simulate(S.debts, effectiveExtra, S.strategy) : null;
+  const simAlt   = simulate(wfDebts,  effectiveExtra,
     S.strategy === 'avalanche' ? 'snowball' : 'avalanche');
 
-  renderMission(sim);
+  renderMission(sim, simBase, totalMin, effectiveExtra);
   renderDebts(sim);
   renderPlan(sim, simAlt);
 }
 
 // ─── MISSION ───────────────────────────────────────────────────────────────
-function renderMission(sim) {
+function renderMission(sim, simBase, totalMin, effectiveExtra) {
   const empty   = document.getElementById('mission-empty');
   const data    = document.getElementById('mission-data');
   const hasData = S.debts.length > 0 && sim;
@@ -1716,22 +1888,35 @@ function renderMission(sim) {
 
   // ── Baseline (minimum payments only) for comparison ──────────────────────
   const simMin    = simulate(S.debts, 0, S.strategy);
-  const totalDebt = S.debts.reduce((s,d) => s + d.balance, 0);
-  const totalMin  = S.debts.reduce((s,d) => s + d.minPayment, 0);
+  const totalDebt  = S.debts.reduce((s,d) => s + d.balance, 0);
+  const totalMinLocal = totalMin ?? S.debts.reduce((s,d) => s + d.minPayment, 0);
+
+  // ── Bi-weekly label ───────────────────────────────────────────────────────
+  const payLabel = document.getElementById('m-pay-label');
+  if (payLabel) payLabel.textContent = S.biweekly ? 'BI-WEEKLY PAYMENT' : 'MONTHLY PAYMENT';
+  const biNote = document.getElementById('m-biweekly-note');
+  if (biNote) {
+    const biwkAmt = fmtDollar((totalMinLocal + S.extra) / 2);
+    biNote.textContent = S.biweekly
+      ? `${biwkAmt} every 2 weeks  (+1 extra payment/year)`
+      : '';
+    biNote.classList.toggle('hidden', !S.biweekly);
+  }
+  // Sync cadence toggle buttons
+  document.getElementById('cadence-monthly')?.classList.toggle('active', !S.biweekly);
+  document.getElementById('cadence-biweekly')?.classList.toggle('active',  S.biweekly);
 
   // ── Payment slider setup ──────────────────────────────────────────────────
-  // Slider shows TOTAL monthly payment (minimums + extra).
-  // Max = totalMin + sensible extra ceiling (debt/6 rounded up to nearest 50).
   const extraCeil = Math.ceil((totalDebt / 6) / 50) * 50;
-  const sliderMax = totalMin + Math.max(extraCeil, 500);
-  const sliderVal = totalMin + S.extra;
+  const sliderMax = totalMinLocal + Math.max(extraCeil, 500);
+  const sliderVal = totalMinLocal + S.extra;
 
   const slider = document.getElementById('m-slider');
-  slider.min   = totalMin;
+  slider.min   = totalMinLocal;
   slider.max   = sliderMax;
   slider.value = Math.min(sliderVal, sliderMax);
 
-  set('m-slider-min-lbl', 'Min ' + fmtDollar(totalMin));
+  set('m-slider-min-lbl', 'Min ' + fmtDollar(totalMinLocal));
   set('m-slider-max-lbl', fmtDollar(sliderMax));
   set('m-pay-amount',     fmtDollar(sliderVal));
 
@@ -1742,10 +1927,6 @@ function renderMission(sim) {
   slider.style.setProperty('--fill', sliderPct + '%');
 
   // ── Freedom ring ──────────────────────────────────────────────────────────
-  // Ring fill = time savings ratio vs minimum-only payments.
-  // At $0 extra → 15% fill (baseline, not demoralising).
-  // As you drag the slider right → ring fills toward 100%.
-  // Formula:  fill = 0.15 + 0.85 × (1 − sim.totalMonths / simMin.totalMonths)
   const RING_CIRC = 2 * Math.PI * 100;
   const timeSaved = simMin && simMin.totalMonths > 0
     ? Math.max(0, 1 - sim.totalMonths / simMin.totalMonths)
@@ -1754,29 +1935,36 @@ function renderMission(sim) {
   document.getElementById('ring-circle').style.strokeDashoffset =
     RING_CIRC * (1 - ringFill);
 
-  // ── Freedom date (inside ring) ────────────────────────────────────────────
-  const m = sim.totalMonths;
-  const fd = new Date();
-  fd.setMonth(fd.getMonth() + m);
-  const dateStr = fd.toLocaleDateString('en-US', { month:'short', year:'numeric' });
-  const subStr  = m < 24
-    ? m + ' month' + (m === 1 ? '' : 's') + ' away'
-    : (m / 12).toFixed(1) + ' years away';
-
-  set('m-date', dateStr);
-  set('m-sub',  subStr);
-
-  // Ring label: show time saved when extra > $0, otherwise nudge to drag
-  if (S.extra > 0 && simMin) {
-    const moSaved = simMin.totalMonths - m;
-    set('m-eff', moSaved > 0 ? '−' + moSaved + ' mo vs minimum' : 'optimised');
+  // ── Freedom date / Goal mode center display ───────────────────────────────
+  if (goalMode) {
+    set('m-freedom-label', 'NEED BY GOAL');
+    const result = updateGoalResult();
+    if (result) {
+      set('m-date', fmtDollar(result.total) + '/mo');
+      set('m-sub',  result.achievable ? 'to hit your goal date' : 'earliest possible');
+    } else {
+      set('m-date', '—');
+      set('m-sub',  'pick a date above');
+    }
+    set('m-eff', '');
   } else {
-    set('m-eff', 'drag slider to optimise ↑');
+    set('m-freedom-label', 'DEBT FREE');
+    const m = sim.totalMonths;
+    const fd = new Date();
+    fd.setMonth(fd.getMonth() + m);
+    set('m-date', fd.toLocaleDateString('en-US', { month:'short', year:'numeric' }));
+    set('m-sub',  m < 24 ? m + ' month' + (m === 1 ? '' : 's') + ' away' : (m/12).toFixed(1) + ' years away');
+    if (S.extra > 0 && simMin) {
+      const moSaved = simMin.totalMonths - m;
+      set('m-eff', moSaved > 0 ? '−' + moSaved + ' mo vs minimum' : 'optimised');
+    } else {
+      set('m-eff', S.biweekly ? 'bi-weekly boost active ↑' : 'drag slider to optimise ↑');
+    }
   }
 
   // ── Savings vs minimum ────────────────────────────────────────────────────
   const intSaved  = simMin ? Math.max(0, simMin.totalInterest - sim.totalInterest) : 0;
-  const moSaved   = simMin ? Math.max(0, simMin.totalMonths   - m)                 : 0;
+  const moSaved   = simMin ? Math.max(0, simMin.totalMonths   - sim.totalMonths)   : 0;
   const moSavedStr = moSaved === 0 ? '0 mo'
     : moSaved < 24 ? moSaved + ' mo'
     : (moSaved / 12).toFixed(1) + ' yrs';
@@ -1795,6 +1983,10 @@ function renderMission(sim) {
   set('m-total-debt', '$' + fmtK(totalDebt));
   set('m-total-int',  '$' + fmtK(sim.totalInterest));
   set('m-debt-count', S.debts.length + ' account' + (S.debts.length !== 1 ? 's' : ''));
+
+  // Show/hide goal toggle button based on mode
+  const goalToggleBtn = document.getElementById('goal-toggle-btn');
+  if (goalToggleBtn) goalToggleBtn.style.display = goalMode ? 'none' : '';
 
   // Timeline
   const tl = document.getElementById('m-timeline');
@@ -1825,6 +2017,21 @@ function renderMission(sim) {
     `;
     tl.appendChild(item);
   });
+
+  // ── Windfall diff banner ──────────────────────────────────────────────────
+  const wfResult = document.getElementById('windfall-result');
+  if (wfResult) {
+    if (windfall > 0 && simBase) {
+      const moGain  = simBase.totalMonths - sim.totalMonths;
+      const intGain = Math.max(0, simBase.totalInterest - sim.totalInterest);
+      wfResult.innerHTML = moGain > 0 || intGain > 0
+        ? `<span class="wf-gain">Applying ${fmtDollar(windfall)} saves <strong>${moGain > 0 ? moGain + ' month' + (moGain===1?'':'s') : ''}</strong>${moGain > 0 && intGain > 0 ? ' and ' : ''}<strong>${intGain > 0 ? fmtDollar(intGain) + ' in interest' : ''}</strong></span>`
+        : `<span class="wf-gain">Debt fully eliminated by this windfall! 🎉</span>`;
+      wfResult.classList.remove('hidden');
+    } else {
+      wfResult.classList.add('hidden');
+    }
+  }
 }
 
 // ─── DEBTS ─────────────────────────────────────────────────────────────────
@@ -1876,6 +2083,11 @@ function renderDebts(sim) {
       <div class="debt-card-footer">
         <div class="debt-card-min">Min ${fmtDollar(d.minPayment)}/mo</div>
         <div class="debt-card-actions">
+          <button class="debt-action-btn paid" onclick="markPaidOff('${d.id}')" aria-label="Mark ${esc(d.name)} as paid off" title="Mark as paid off">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
           <button class="debt-action-btn" onclick="openEdit('${d.id}')" aria-label="Edit ${esc(d.name)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -2456,7 +2668,7 @@ ${debtList}
 ${sim ? `
 Total debt: ${fmtDollar(totalDebt)}
 Monthly interest accrual: ${fmtDollar(monthlyInterest)}
-Current strategy: ${S.strategy === 'avalanche' ? 'Smart Pay (highest rate first)' : 'Quick Wins (smallest balance first)'}
+Current strategy: ${S.strategy === 'avalanche' ? 'Smart Pay (highest rate first)' : 'Quick Wins (smallest balance first)'}${S.biweekly ? ' (bi-weekly payments — 13 payments/year)' : ''}
 Months to debt-free at current payments: ${sim.totalMonths} months (${(sim.totalMonths / 12).toFixed(1)} years)
 Total interest if nothing changes: ${fmtDollar(sim.totalInterest)}` : ''}
 
@@ -2687,6 +2899,192 @@ async function sharePayoffPlan() {
   }
 }
 
+// ─── WINDFALL ──────────────────────────────────────────────────────────────
+function debtsWithWindfall(debts, strategy, amount) {
+  if (!amount || !debts.length) return debts;
+  const sorted = [...debts].sort((a, b) =>
+    strategy === 'avalanche' ? b.rate - a.rate : a.balance - b.balance
+  );
+  const copy = debts.map(d => ({ ...d }));
+  let rem = amount;
+  for (const d of sorted) {
+    const target = copy.find(x => x.id === d.id);
+    if (!target || rem <= 0) break;
+    const reduction = Math.min(rem, target.balance);
+    target.balance  = +(target.balance - reduction).toFixed(2);
+    rem -= reduction;
+  }
+  return copy.filter(d => d.balance > 0.005);
+}
+
+function applyWindfall(amount) {
+  windfall = Math.max(0, Math.round(amount || 0));
+  const clearBtn = document.getElementById('windfall-clear');
+  if (clearBtn) clearBtn.classList.toggle('hidden', windfall === 0);
+  clearSimCache();
+  render();
+}
+
+function clearWindfall() {
+  windfall = 0;
+  const inp = document.getElementById('windfall-input');
+  if (inp) inp.value = '';
+  const clearBtn = document.getElementById('windfall-clear');
+  if (clearBtn) clearBtn.classList.add('hidden');
+  clearSimCache();
+  render();
+}
+
+// ─── BI-WEEKLY ─────────────────────────────────────────────────────────────
+function setBiweekly(on) {
+  S.biweekly = !!on;
+  clearSimCache();
+  save();
+  render();
+}
+
+// ─── GOAL DATE (REVERSE SIMULATION) ────────────────────────────────────────
+function setGoalMode(on) {
+  goalMode = !!on;
+  const panel = document.getElementById('goal-panel');
+  if (panel) panel.classList.toggle('hidden', !on);
+  if (on) populateGoalSelects();
+  clearSimCache();
+  render();
+}
+
+function populateGoalSelects() {
+  const mSel = document.getElementById('goal-month');
+  const ySel = document.getElementById('goal-year');
+  if (!mSel || !ySel) return;
+
+  const now = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  if (!mSel.options.length) {
+    months.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = m;
+      mSel.appendChild(opt);
+    });
+    mSel.value = now.getMonth();
+  }
+  if (!ySel.options.length) {
+    for (let y = now.getFullYear(); y <= now.getFullYear() + 10; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      ySel.appendChild(opt);
+    }
+    ySel.value = now.getFullYear() + 2;
+  }
+}
+
+function updateGoalResult() {
+  const mSel  = document.getElementById('goal-month');
+  const ySel  = document.getElementById('goal-year');
+  const resEl = document.getElementById('goal-result');
+  if (!mSel || !ySel || !resEl || !S.debts.length) return null;
+
+  const goalYear  = +ySel.value;
+  const goalMonth = +mSel.value;
+  const now       = new Date();
+  const targetMonths = (goalYear - now.getFullYear()) * 12 + (goalMonth - now.getMonth());
+
+  if (targetMonths <= 0) {
+    resEl.textContent = 'Choose a future date';
+    return null;
+  }
+
+  const totalMin = S.debts.reduce((s,d) => s + d.minPayment, 0);
+  const maxExtra = S.debts.reduce((s,d) => s + d.balance, 0);
+
+  // Binary search for minimum extra payment that hits target
+  let lo = 0, hi = maxExtra;
+  const simMax = simulate(S.debts, hi, S.strategy);
+  if (!simMax || simMax.totalMonths > targetMonths) {
+    // Not achievable — show earliest possible
+    const earliest = simMax;
+    if (earliest) {
+      const ed = new Date();
+      ed.setMonth(ed.getMonth() + earliest.totalMonths);
+      const dateStr = ed.toLocaleDateString('en-US', { month:'short', year:'numeric' });
+      resEl.innerHTML = `<span class="goal-impossible">Not reachable — earliest: ${dateStr}</span>`;
+    }
+    return { total: totalMin + maxExtra, achievable: false };
+  }
+
+  for (let i = 0; i < 40; i++) {
+    if (lo >= hi) break;
+    const mid = Math.ceil((lo + hi) / 2);
+    const s   = simulate(S.debts, mid, S.strategy);
+    if (s && s.totalMonths <= targetMonths) hi = mid; else lo = mid + 1;
+  }
+  const required = totalMin + hi;
+  resEl.innerHTML = `You need <strong>${fmtDollar(required)}/mo</strong> to hit this date`;
+  return { total: required, achievable: true };
+}
+
+// ─── PAYOFF CELEBRATION ─────────────────────────────────────────────────────
+function markPaidOff(id) {
+  const d = S.debts.find(x => x.id === id);
+  if (!d) return;
+  showConfirm(
+    'Mark "' + d.name + '" as paid off?',
+    'Celebrate this win! The debt will be removed from your list.',
+    'PAID OFF ✓', 'success',
+    () => {
+      haptic('heavy');
+      celebrateDebt(d);
+      if (aiChatHistory.length) aiContextDirty = true;
+      S.debts = S.debts.filter(x => x.id !== id);
+      if (!S.debts.length) S.extra = 0;
+      clearSimCache();
+      save();
+    }
+  );
+}
+
+function celebrateDebt(d) {
+  const overlay = document.getElementById('celebrate-overlay');
+  if (!overlay) { render(); return; }
+
+  // Build confetti pieces
+  const container = document.getElementById('confetti-container');
+  container.innerHTML = '';
+  const colors = ['#6366f1','#a855f7','#ec4899','#f59e0b','#10b981','#06b6d4'];
+  for (let i = 0; i < 48; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      --x:${Math.random() * 100}vw;
+      --rot:${Math.random() * 720 - 360}deg;
+      --delay:${(Math.random() * 0.8).toFixed(2)}s;
+      --dur:${(0.9 + Math.random() * 0.6).toFixed(2)}s;
+      background:${colors[i % colors.length]};
+      width:${6 + Math.random() * 6}px;
+      height:${6 + Math.random() * 6}px;
+    `;
+    container.appendChild(piece);
+  }
+
+  // Populate text
+  document.getElementById('celebrate-name').textContent = d.name;
+
+  // Show overlay
+  overlay.classList.add('show');
+
+  // Auto-dismiss after 4s then re-render
+  overlay._dismissTimer = setTimeout(() => dismissCelebration(), 4000);
+}
+
+function dismissCelebration() {
+  const overlay = document.getElementById('celebrate-overlay');
+  if (!overlay) return;
+  clearTimeout(overlay._dismissTimer);
+  overlay.classList.remove('show');
+  render();
+}
+
 // ─── HAPTIC ────────────────────────────────────────────────────────────────
 function haptic(type) {
   if (!navigator.vibrate) return;
@@ -2711,7 +3109,7 @@ function showConfirm(title, body, okLabel, okStyle, cb) {
   set('confirm-body',  body);
   const btn = document.getElementById('confirm-ok-btn');
   btn.textContent = okLabel || 'CONFIRM';
-  btn.className   = 'modal-save' + (okStyle === 'danger' ? ' btn-danger' : '');
+  btn.className   = 'modal-save' + (okStyle === 'danger' ? ' btn-danger' : okStyle === 'success' ? ' btn-success' : '');
   document.getElementById('confirm-overlay').classList.add('open');
 }
 function _confirmYes() {
@@ -2927,6 +3325,17 @@ if ('serviceWorker' in navigator) {
 }
 
 </script>
+
+<!-- ══ CELEBRATION OVERLAY ═══════════════════════════════════════════════════ -->
+<div id="celebrate-overlay" class="celebrate-overlay">
+  <div id="confetti-container" class="confetti-container" aria-hidden="true"></div>
+  <div class="celebrate-card">
+    <div class="celebrate-icon">🎉</div>
+    <div class="celebrate-name" id="celebrate-name"></div>
+    <div class="celebrate-badge">Paid in full!</div>
+    <button class="celebrate-btn" onclick="dismissCelebration()">Keep going →</button>
+  </div>
+</div>
 
 <!-- ══ GUIDE MODAL ════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Premium guide" onclick="closeGuide(event)">
