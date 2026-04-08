@@ -858,6 +858,11 @@ input[type=range]:focus { outline:none; }
 .form-error {
   font-size:12px; color:var(--red); margin-top:6px; display:none;
 }
+.form-hint {
+  font-size:12px; color:var(--dim2); margin-top:5px; min-height:16px;
+  transition:color .2s;
+}
+.form-hint.warn { color:#f59e0b; }
 .form-error.show { display:block; }
 
 .modal-actions { display:flex; gap:10px; margin-top:8px; }
@@ -1594,13 +1599,15 @@ input[type=range] {
       <div>
         <label class="form-label" for="f-bal">BALANCE ($)</label>
         <input class="form-input" id="f-bal" type="number"
-               inputmode="decimal" placeholder="5000" min="1" max="10000000">
+               inputmode="decimal" placeholder="5000" min="1" max="10000000"
+               oninput="updateMinHint()">
       </div>
       <!-- APR -->
       <div>
         <label class="form-label" for="f-rate">APR (%)</label>
         <input class="form-input" id="f-rate" type="number"
-               inputmode="decimal" placeholder="19.99" min="0" max="100" step="0.01">
+               inputmode="decimal" placeholder="19.99" min="0" max="100" step="0.01"
+               oninput="updateMinHint()">
       </div>
     </div>
 
@@ -1609,6 +1616,7 @@ input[type=range] {
       <label class="form-label" for="f-min">MINIMUM PAYMENT ($/mo)</label>
       <input class="form-input" id="f-min" type="number"
              inputmode="decimal" placeholder="125" min="1">
+      <div id="f-min-hint" class="form-hint"></div>
       <div class="form-error" id="f-error"></div>
     </div>
 
@@ -2253,12 +2261,30 @@ function goTo(viewId, btn) {
 }
 
 // ─── ADD / EDIT DEBT ───────────────────────────────────────────────────────
+function updateMinHint() {
+  const bal  = parseFloat(document.getElementById('f-bal').value);
+  const rate = parseFloat(document.getElementById('f-rate').value);
+  const hint = document.getElementById('f-min-hint');
+  if (!hint) return;
+  if (!Number.isFinite(bal) || bal <= 0 || !Number.isFinite(rate) || rate <= 0) {
+    hint.textContent = '';
+    hint.classList.remove('warn');
+    return;
+  }
+  const monthlyInterest = bal * rate / 100 / 12;
+  const required = Math.ceil(monthlyInterest) + 1;
+  hint.textContent = `Monthly interest: $${fmt(monthlyInterest, 2)} — must pay at least $${required}/mo`;
+  hint.classList.toggle('warn', monthlyInterest > 200);
+}
+
 function clearFormErrors() {
   ['f-name','f-bal','f-rate','f-min'].forEach(id => {
     document.getElementById(id)?.classList.remove('error');
   });
-  const errEl = document.getElementById('f-error');
-  if (errEl) { errEl.classList.remove('show'); errEl.textContent = ''; }
+  const errEl  = document.getElementById('f-error');
+  if (errEl)  { errEl.classList.remove('show'); errEl.textContent = ''; }
+  const hint = document.getElementById('f-min-hint');
+  if (hint)   { hint.textContent = ''; hint.classList.remove('warn'); }
 }
 
 function openAdd() {
@@ -2284,6 +2310,7 @@ function openEdit(id) {
   document.getElementById('f-rate').value  = d.rate;
   document.getElementById('f-min').value   = d.minPayment;
   clearFormErrors();
+  updateMinHint();
   document.getElementById('quick-types').style.display = 'none';
   document.getElementById('debt-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-name').focus(), 350);
